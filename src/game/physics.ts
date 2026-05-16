@@ -1,32 +1,71 @@
 import type { Coin } from './coin';
 import type { World } from './world';
-import { FRICTION_MU, G, RESTITUTION, SETTLED_EPS } from './constants';
+import { CoinKind, Owner } from './types';
+import {
+  EXPLODE_TICKS,
+  FRICTION_MU,
+  G,
+  RESTITUTION,
+  SETTLED_EPS,
+} from './constants';
+import { config } from './config';
 
 const COLLISION_SLACK = 2;
 
 export interface PhysicsEvents {
   onCollide?(a: Coin, b: Coin): void;
   onDie?(c: Coin): void;
+  onExplode?(bomb: Coin): void;
 }
 
 export function step(world: World, events?: PhysicsEvents): void {
   const coins = world.coins;
   const prev: Array<{ x: number; y: number }> = new Array(coins.length);
 
+  // 1. Save pre-move positions, then move (exploding bombs don't move)
   for (let i = 0; i < coins.length; i++) {
     const c = coins[i]!;
     prev[i] = { x: c.pos.x, y: c.pos.y };
-    if (!c.alive) continue;
+    if (!c.alive || c.exploding) continue;
     c.pos.x += c.vel.x;
     c.pos.y += c.vel.y;
   }
 
+  // 2. Advance ongoing explosion animations
+  for (const c of coins) {
+    if (!c.exploding) continue;
+    c.exploding.ticksLeft--;
+    if (c.exploding.ticksLeft <= 0) {
+      c.alive = false;
+      c.exploding = undefined;
+    }
+  }
+
+  // 3. Pair collisions — trigger explosions for non-exploding bombs
   for (let i = 0; i < coins.length; i++) {
     for (let j = i + 1; j < coins.length; j++) {
       const a = coins[i]!;
       const b = coins[j]!;
       if (!a.alive || !b.alive) continue;
+      if (a.exploding || b.exploding) continue;
       if (!overlaps(a, b)) continue;
+
+      const aBomb = a.kind === CoinKind.Bomb;
+      const bBomb = b.kind === CoinKind.Bomb;
+
+      if (aBomb || bBomb) {
+        const bomb = aBomb ? a : b;
+        const trigger = aBomb ? b : a;
+        if (trigger.kind === CoinKind.Bomb) {
+          // Two bombs colliding — both trigger; treat one as the bomb and the
+          // other as the trigger that will (likely) die in the explosion.
+          triggerExplosion(world, bomb, trigger, events);
+        } else {
+          triggerExplosion(world, bomb, trigger, events);
+        }
+        continue;
+      }
+
       const pa = prev[i]!;
       const pb = prev[j]!;
       a.pos.x = pa.x;
@@ -38,14 +77,15 @@ export function step(world: World, events?: PhysicsEvents): void {
     }
   }
 
+  // 4. Walls
   for (let i = 0; i < coins.length; i++) {
     const c = coins[i]!;
-    if (!c.alive) continue;
+    if (!c.alive || c.exploding) continue;
     const r = c.radius;
     const outY = c.pos.y < r || c.pos.y > world.table.height - r;
     if (outY) {
       c.alive = false;
-      world.aliveCount[c.owner]--;
+      decrementAlive(world, c);
       events?.onDie?.(c);
       continue;
     }
@@ -58,8 +98,9 @@ export function step(world: World, events?: PhysicsEvents): void {
     }
   }
 
+  // 5. Friction
   for (const c of coins) {
-    if (!c.alive) continue;
+    if (!c.alive || c.exploding) continue;
     const s = Math.hypot(c.vel.x, c.vel.y);
     if (s < SETTLED_EPS) {
       c.vel.x = 0;
@@ -109,8 +150,72 @@ export function resolveCollision(a: Coin, b: Coin): void {
 
 export function allSettled(world: World): boolean {
   for (const c of world.coins) {
+    if (c.exploding) return false;
     if (!c.alive) continue;
     if (c.vel.x !== 0 || c.vel.y !== 0) return false;
   }
   return true;
+}
+
+function triggerExplosion(
+  world: World,
+  initialBomb: Coin,
+  initialTrigger: Coin,
+  events: PhysicsEvents | undefined,
+): void {
+  const triggerOwner = initialTrigger.owner;
+  const peakRadius = config.explosionRadius;
+  const queue: Coin[] = [initialBomb];
+
+  while (queue.length > 0) {
+    const bomb = queue.shift()!;
+    if (bomb.exploding || !bomb.alive) continue;
+
+    bomb.exploding = {
+      ticksLeft: EXPLODE_TICKS,
+      startRadius: bomb.radius,
+      peakRadius,
+    };
+    bomb.vel.x = 0;
+    bomb.vel.y = 0;
+    events?.onExplode?.(bomb);
+
+    for (const victim of world.coins) {
+      if (victim === bomb) continue;
+      if (!victim.alive) continue;
+      if (victim.exploding) continue;
+
+      const dx = victim.pos.x - bomb.pos.x;
+      const dy = victim.pos.y - bomb.pos.y;
+      const r = peakRadius + victim.radius;
+      if (dx * dx + dy * dy > r * r) continue;
+
+      const isInitialTrigger = victim === initialTrigger;
+      if (
+        !isInitialTrigger &&
+        config.misfireProtection &&
+        victim.owner !== Owner.Neutral &&
+        victim.owner === triggerOwner
+      ) {
+        continue;
+      }
+
+      if (victim.kind === CoinKind.Bomb && config.chainBombs && !victim.exploding) {
+        queue.push(victim);
+        continue;
+      }
+
+      victim.alive = false;
+      decrementAlive(world, victim);
+      // Skip events.onDie here — the bomb's onExplode covers the audio cue for
+      // every victim in the blast. Per-victim die tones would pile on top of
+      // the boom and sound chaotic.
+    }
+  }
+}
+
+function decrementAlive(world: World, c: Coin): void {
+  if (c.owner === Owner.P1) world.aliveCount[Owner.P1]--;
+  else if (c.owner === Owner.P2) world.aliveCount[Owner.P2]--;
+  else world.aliveCount[Owner.Neutral]--;
 }

@@ -72,6 +72,33 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
   );
   card.append(gameSec.fieldset);
 
+  // -- stones & bombs section --
+  const piecesSec = section('棋子与炸弹');
+  const stoneCountRow = sliderRow(
+    piecesSec,
+    '棋子数',
+    CONFIG_RANGES.stoneCount.min,
+    CONFIG_RANGES.stoneCount.max,
+    config.stoneCount,
+  );
+  const bombCountRow = sliderRow(
+    piecesSec,
+    '炸弹数',
+    CONFIG_RANGES.bombCount.min,
+    CONFIG_RANGES.bombCount.max,
+    config.bombCount,
+  );
+  const explosionRow = sliderRow(
+    piecesSec,
+    '爆破半径',
+    CONFIG_RANGES.explosionRadius.min,
+    CONFIG_RANGES.explosionRadius.max,
+    config.explosionRadius,
+  );
+  const chainRow = checkboxRow(piecesSec, '连锁爆破', config.chainBombs);
+  const misfireRow = checkboxRow(piecesSec, '不会被误炸', config.misfireProtection);
+  card.append(piecesSec.fieldset);
+
   // -- misc --
   const miscSec = section('其它');
   const soundRow = document.createElement('label');
@@ -115,6 +142,11 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     speedRow.set(config.maxShotSpeed);
     aiRow.set(config.aiAngleSamples);
     soundInput.checked = config.soundEnabled;
+    stoneCountRow.set(config.stoneCount);
+    bombCountRow.set(config.bombCount);
+    explosionRow.set(config.explosionRadius);
+    chainRow.set(config.chainBombs);
+    misfireRow.set(config.misfireProtection);
   };
 
   const readFromUi = (): GameConfig => ({
@@ -126,6 +158,11 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     maxShotSpeed: speedRow.get(),
     aiAngleSamples: aiRow.get(),
     soundEnabled: soundInput.checked,
+    stoneCount: stoneCountRow.get(),
+    bombCount: bombCountRow.get(),
+    explosionRadius: explosionRow.get(),
+    chainBombs: chainRow.get(),
+    misfireProtection: misfireRow.get(),
   });
 
   const close = () => {
@@ -151,6 +188,11 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     speedRow.set(CONFIG_DEFAULTS.maxShotSpeed);
     aiRow.set(CONFIG_DEFAULTS.aiAngleSamples);
     soundInput.checked = CONFIG_DEFAULTS.soundEnabled;
+    stoneCountRow.set(CONFIG_DEFAULTS.stoneCount);
+    bombCountRow.set(CONFIG_DEFAULTS.bombCount);
+    explosionRow.set(CONFIG_DEFAULTS.explosionRadius);
+    chainRow.set(CONFIG_DEFAULTS.chainBombs);
+    misfireRow.set(CONFIG_DEFAULTS.misfireProtection);
   });
 
   return {
@@ -190,6 +232,33 @@ function colorRow(
 interface SliderRow {
   set(v: number): void;
   get(): number;
+}
+
+interface CheckboxRow {
+  set(v: boolean): void;
+  get(): boolean;
+}
+
+function checkboxRow(
+  parent: { fieldset: HTMLFieldSetElement },
+  label: string,
+  initial: boolean,
+): CheckboxRow {
+  const row = document.createElement('label');
+  row.className = 'config-row checkbox';
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.checked = initial;
+  row.append(input, document.createTextNode(' ' + label));
+  parent.fieldset.append(row);
+  return {
+    set(v) {
+      input.checked = v;
+    },
+    get() {
+      return input.checked;
+    },
+  };
 }
 
 function sliderRow(

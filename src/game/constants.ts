@@ -16,6 +16,12 @@ export const SETTLED_EPS = 0.05;
 export const POWER_SCALE = 0.07;
 export const MIN_DRAG_DIST = 15;
 
+export const STONE_RADIUS = 15;
+export const STONE_MASS = 8;
+export const BOMB_RADIUS = 12;
+export const BOMB_MASS = 1;
+export const EXPLODE_TICKS = 14;
+
 export const AI_THINK_MS = 400;
 export const AI_ANGLE_SAMPLES = 5;
 export const AI_SIM_TICK_CAP = 600;

@@ -1,9 +1,13 @@
 import type { Coin } from '../game/coin';
 import type { Table } from '../game/table';
-import { Owner } from '../game/types';
+import { CoinKind, Owner } from '../game/types';
 import { config } from '../game/config';
+import { EXPLODE_TICKS } from '../game/constants';
 
 const WALL_THICKNESS = 4;
+const STONE_COLOR = '#c84acb';
+const BOMB_OUTER = '#222222';
+const BOMB_INNER = '#f5e8cb';
 
 let wallPattern: CanvasPattern | null = null;
 
@@ -66,23 +70,145 @@ export function drawTable(ctx: CanvasRenderingContext2D, table: Table): void {
   ctx.stroke();
 }
 
-export function drawCoin(ctx: CanvasRenderingContext2D, coin: Coin, active = false): void {
+export function drawPiece(ctx: CanvasRenderingContext2D, coin: Coin, active = false): void {
+  if (coin.exploding) {
+    drawExplosion(ctx, coin);
+    return;
+  }
   if (!coin.alive) return;
+  switch (coin.kind) {
+    case CoinKind.Stone:
+      drawStone(ctx, coin);
+      return;
+    case CoinKind.Bomb:
+      drawBomb(ctx, coin);
+      return;
+    case CoinKind.Coin:
+    default:
+      drawCoin(ctx, coin, active);
+      return;
+  }
+}
+
+function drawCoin(ctx: CanvasRenderingContext2D, coin: Coin, active: boolean): void {
   const { x, y } = coin.pos;
   const r = coin.radius;
   const ownerColor = coin.owner === Owner.P1 ? config.p1Color : config.p2Color;
   const base = active ? lighten(ownerColor, 0.18) : ownerColor;
 
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.beginPath();
-  ctx.ellipse(x + 1, y + 2, r * 0.95, r * 0.55, 0, 0, Math.PI * 2);
-  ctx.fill();
+  shadow(ctx, x, y, r);
 
   ctx.fillStyle = base;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
 
+  applyBevel(ctx, x, y, r);
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x, y - r + 2);
+  ctx.lineTo(x, y - r + 6);
+  ctx.stroke();
+
+  if (active) {
+    ctx.strokeStyle = 'rgba(255, 230, 120, 0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y, r + 2, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function drawStone(ctx: CanvasRenderingContext2D, coin: Coin): void {
+  const { x, y } = coin.pos;
+  const r = coin.radius;
+
+  shadow(ctx, x, y, r);
+
+  ctx.fillStyle = STONE_COLOR;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  applyBevel(ctx, x, y, r);
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawBomb(ctx: CanvasRenderingContext2D, coin: Coin): void {
+  const { x, y } = coin.pos;
+  const r = coin.radius;
+
+  shadow(ctx, x, y, r);
+
+  // outer dark casing
+  ctx.fillStyle = BOMB_OUTER;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // inner light core (fuse marker)
+  ctx.fillStyle = BOMB_INNER;
+  ctx.beginPath();
+  ctx.arc(x, y, r * 0.45, 0, Math.PI * 2);
+  ctx.fill();
+
+  // small fuse spark dot at top
+  ctx.fillStyle = '#ff9a3c';
+  ctx.beginPath();
+  ctx.arc(x, y - r + 2, 1.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawExplosion(ctx: CanvasRenderingContext2D, coin: Coin): void {
+  if (!coin.exploding) return;
+  const { x, y } = coin.pos;
+  const { ticksLeft, startRadius, peakRadius } = coin.exploding;
+  // EXPLODE_TICKS is implicit: progress = 1 - ticksLeft / startTicks, but we
+  // don't have startTicks here; derive from the current ticksLeft / a constant
+  // assumed equal to constants.EXPLODE_TICKS. Instead, just normalize using
+  // ticksLeft directly: render with radius shrinking from peakRadius (at the
+  // start) toward startRadius (at the end of the animation).
+  const t = Math.max(0, ticksLeft);
+  const p = 1 - t / EXPLODE_TICKS;
+  const radius = startRadius + (peakRadius - startRadius) * p;
+
+  const grad = ctx.createRadialGradient(x, y, Math.max(1, radius * 0.2), x, y, radius);
+  grad.addColorStop(0, `rgba(255, 230, 90, ${0.85 * (1 - p * 0.6)})`);
+  grad.addColorStop(0.5, `rgba(255, 130, 40, ${0.55 * (1 - p * 0.6)})`);
+  grad.addColorStop(1, 'rgba(160, 30, 10, 0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = `rgba(255, 90, 30, ${0.9 * (1 - p)})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function shadow(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(x + 1, y + 2, r * 0.95, r * 0.55, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function applyBevel(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
   const grad = ctx.createRadialGradient(x - r * 0.4, y - r * 0.5, 1, x, y, r);
   grad.addColorStop(0, 'rgba(255,255,255,0.55)');
   grad.addColorStop(0.55, 'rgba(255,255,255,0.0)');
@@ -101,27 +227,6 @@ export function drawCoin(ctx: CanvasRenderingContext2D, coin: Coin, active = fal
   ctx.beginPath();
   ctx.arc(x, y, r - 2, Math.PI * 0.25, Math.PI * 1.25);
   ctx.stroke();
-
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.stroke();
-
-  ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  ctx.moveTo(x, y - r + 2);
-  ctx.lineTo(x, y - r + 6);
-  ctx.stroke();
-
-  if (active) {
-    ctx.strokeStyle = 'rgba(255, 230, 120, 0.9)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(x, y, r + 2, 0, Math.PI * 2);
-    ctx.stroke();
-  }
 }
 
 function lighten(hex: string, amount: number): string {

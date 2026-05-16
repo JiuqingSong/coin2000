@@ -7,6 +7,11 @@ export interface GameConfig {
   maxShotSpeed: number;
   aiAngleSamples: number;
   soundEnabled: boolean;
+  stoneCount: number;
+  bombCount: number;
+  explosionRadius: number;
+  chainBombs: boolean;
+  misfireProtection: boolean;
 }
 
 export const CONFIG_DEFAULTS: Readonly<GameConfig> = {
@@ -18,6 +23,11 @@ export const CONFIG_DEFAULTS: Readonly<GameConfig> = {
   maxShotSpeed: 14,
   aiAngleSamples: 5,
   soundEnabled: true,
+  stoneCount: 5,
+  bombCount: 0,
+  explosionRadius: 30,
+  chainBombs: false,
+  misfireProtection: false,
 };
 
 export const CONFIG_RANGES = {
@@ -26,6 +36,9 @@ export const CONFIG_RANGES = {
   coinMass: { min: 5, max: 10 },
   maxShotSpeed: { min: 11, max: 20 },
   aiAngleSamples: { min: 1, max: 5 },
+  stoneCount: { min: 0, max: 10 },
+  bombCount: { min: 0, max: 5 },
+  explosionRadius: { min: 15, max: 100 },
 } as const;
 
 const STORAGE_KEY = 'coin2000.config.v1';
@@ -79,6 +92,11 @@ function sanitize(next: GameConfig): GameConfig {
     maxShotSpeed: clampInt(next.maxShotSpeed, CONFIG_RANGES.maxShotSpeed.min, CONFIG_RANGES.maxShotSpeed.max),
     aiAngleSamples: clampInt(next.aiAngleSamples, CONFIG_RANGES.aiAngleSamples.min, CONFIG_RANGES.aiAngleSamples.max),
     soundEnabled: !!next.soundEnabled,
+    stoneCount: clampInt(next.stoneCount, CONFIG_RANGES.stoneCount.min, CONFIG_RANGES.stoneCount.max),
+    bombCount: clampInt(next.bombCount, CONFIG_RANGES.bombCount.min, CONFIG_RANGES.bombCount.max),
+    explosionRadius: clampInt(next.explosionRadius, CONFIG_RANGES.explosionRadius.min, CONFIG_RANGES.explosionRadius.max),
+    chainBombs: !!next.chainBombs,
+    misfireProtection: !!next.misfireProtection,
   };
 }
 

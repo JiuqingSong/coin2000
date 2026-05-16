@@ -49,6 +49,7 @@ export class Engine {
       ? {
           onCollide: () => opts.bell!.ringCollision(),
           onDie: () => opts.bell!.ringDie(),
+          onExplode: () => opts.bell!.ringExplosion(),
         }
       : undefined;
   }
@@ -69,7 +70,7 @@ export class Engine {
     }
   }
 
-  setPlayer(owner: Owner, player: Player): void {
+  setPlayer(owner: Owner.P1 | Owner.P2, player: Player): void {
     const wasActive =
       this.world.phase === Phase.Aiming && this.world.current === owner;
     if (wasActive) this.players[owner].cancelTurn();

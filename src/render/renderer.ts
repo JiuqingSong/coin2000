@@ -2,7 +2,7 @@ import type { World } from '../game/world';
 import type { AimPreview } from '../input/aim';
 import type { CanvasView } from './canvas';
 import { config } from '../game/config';
-import { drawCoin, drawTable } from './sprites';
+import { drawPiece, drawTable } from './sprites';
 
 export function draw(view: CanvasView, world: World, aim: AimPreview | null = null): void {
   view.resetTransform();
@@ -13,7 +13,7 @@ export function draw(view: CanvasView, world: World, aim: AimPreview | null = nu
   drawTable(view.ctx, world.table);
   const activeId = aim?.coinId ?? null;
   for (const coin of world.coins) {
-    drawCoin(view.ctx, coin, coin.id === activeId);
+    drawPiece(view.ctx, coin, coin.id === activeId);
   }
   if (aim) drawAim(view.ctx, aim);
 }

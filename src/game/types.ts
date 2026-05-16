@@ -3,10 +3,13 @@ export type Vec2 = { x: number; y: number };
 export const enum Owner {
   P1 = 0,
   P2 = 1,
+  Neutral = 2,
 }
 
 export const enum CoinKind {
   Coin = 'coin',
+  Stone = 'stone',
+  Bomb = 'bomb',
 }
 
 export type CoinId = number;
