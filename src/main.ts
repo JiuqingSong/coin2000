@@ -1,4 +1,5 @@
 import { Bell } from './audio/bell';
+import { Music } from './audio/music';
 import { Engine } from './game/engine';
 import { Owner } from './game/types';
 import { config, loadConfig, subscribeConfig } from './game/config';
@@ -32,10 +33,12 @@ const aim = new AimController(board, view);
 const bell = new Bell();
 bell.setMuted(!config.soundEnabled);
 subscribeConfig(() => bell.setMuted(!config.soundEnabled));
+const music = new Music();
 const reactions = mountReactions(messageEl);
 
 const unlockAudio = () => {
   bell.resume();
+  music.unlock();
   window.removeEventListener('pointerdown', unlockAudio);
   window.removeEventListener('keydown', unlockAudio);
 };
@@ -55,6 +58,7 @@ const restart = () => {
   hud.clearResult();
   reactions.clear();
   engine.start();
+  music.start();
 };
 
 const hud = mountHud(hudEl, overlayEl, restart, p2Mode);
@@ -87,8 +91,9 @@ const engine = new Engine({
   onRoundEnd: (result) => hud.showResult(result),
 });
 
-mountChrome(chromeEl, {
+const chrome = mountChrome(chromeEl, {
   initialP2Mode: p2Mode,
+  initialMusicOn: music.isEnabled(),
   onP2ModeChange: (mode) => {
     p2Mode = mode;
     hud.setP2Mode(mode);
@@ -96,7 +101,9 @@ mountChrome(chromeEl, {
   },
   onMapChange: () => restart(),
   onRestart: restart,
+  onMusicToggle: () => music.toggle(),
 });
+music.subscribe((on) => chrome.setMusicOn(on));
 
 const configDialog = mountConfig(document.body);
 
@@ -104,6 +111,7 @@ const welcome = mountWelcome(document.body, {
   onStart: () => {
     welcome.hide();
     engine.start();
+    music.start();
   },
   onSettings: () => configDialog.open(),
 });

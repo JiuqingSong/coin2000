@@ -85,6 +85,10 @@ const ZH_STRINGS = {
   'chrome.p2.human': '玩家',
   'chrome.map': '地图',
   'chrome.restart': '重新开始',
+  'chrome.music.on': '♪ 音乐',
+  'chrome.music.off': '🔇 音乐',
+  'chrome.music.title.on': '关闭背景音乐',
+  'chrome.music.title.off': '开启背景音乐',
   'chrome.lang.toggle': 'EN',
   'chrome.lang.toggle.title': 'Switch to English',
 
@@ -174,6 +178,10 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'chrome.p2.human': 'Human',
   'chrome.map': 'Map',
   'chrome.restart': 'Restart',
+  'chrome.music.on': '♪ Music',
+  'chrome.music.off': '🔇 Music',
+  'chrome.music.title.on': 'Turn music off',
+  'chrome.music.title.off': 'Turn music on',
   'chrome.lang.toggle': '日',
   'chrome.lang.toggle.title': '日本語に切り替え',
 
@@ -263,6 +271,10 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'chrome.p2.human': '対戦',
   'chrome.map': 'マップ',
   'chrome.restart': '再スタート',
+  'chrome.music.on': '♪ 音楽',
+  'chrome.music.off': '🔇 音楽',
+  'chrome.music.title.on': 'BGMをオフ',
+  'chrome.music.title.off': 'BGMをオン',
   'chrome.lang.toggle': '中',
   'chrome.lang.toggle.title': '切换到中文',
 

@@ -11,13 +11,30 @@ export type P2Mode = 'ai' | 'human';
 
 export interface ChromeOptions {
   initialP2Mode: P2Mode;
+  initialMusicOn: boolean;
   onP2ModeChange(mode: P2Mode): void;
   onMapChange(mapId: MapId): void;
   onRestart(): void;
+  onMusicToggle(): void;
 }
 
-export function mountChrome(root: HTMLElement, opts: ChromeOptions): void {
+export interface ChromeHandle {
+  setMusicOn(on: boolean): void;
+}
+
+export function mountChrome(root: HTMLElement, opts: ChromeOptions): ChromeHandle {
   let p2Mode = opts.initialP2Mode;
+  let musicOn = opts.initialMusicOn;
+  let musicBtnEl: HTMLButtonElement | null = null;
+
+  const refreshMusicBtn = () => {
+    if (!musicBtnEl) return;
+    musicBtnEl.textContent = musicOn ? t('chrome.music.on') : t('chrome.music.off');
+    const title = musicOn ? t('chrome.music.title.on') : t('chrome.music.title.off');
+    musicBtnEl.title = title;
+    musicBtnEl.setAttribute('aria-label', title);
+    musicBtnEl.classList.toggle('off', !musicOn);
+  };
 
   const render = () => {
     root.replaceChildren();
@@ -69,6 +86,13 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): void {
     restart.textContent = t('chrome.restart');
     restart.addEventListener('click', opts.onRestart);
 
+    const musicBtn = document.createElement('button');
+    musicBtn.type = 'button';
+    musicBtn.className = 'music-toggle';
+    musicBtn.addEventListener('click', opts.onMusicToggle);
+    musicBtnEl = musicBtn;
+    refreshMusicBtn();
+
     const langBtn = document.createElement('button');
     langBtn.type = 'button';
     langBtn.className = 'lang-toggle';
@@ -77,11 +101,18 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): void {
     langBtn.setAttribute('aria-label', t('chrome.lang.toggle.title'));
     langBtn.addEventListener('click', toggleLocale);
 
-    controls.append(p2Label, mapLabel, restart, langBtn);
+    controls.append(p2Label, mapLabel, restart, musicBtn, langBtn);
     root.append(title, controls);
   };
 
   render();
   subscribeLocale(render);
   subscribeMap(render);
+
+  return {
+    setMusicOn(on: boolean) {
+      musicOn = on;
+      refreshMusicBtn();
+    },
+  };
 }
