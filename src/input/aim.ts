@@ -40,6 +40,7 @@ export class AimController {
     canvas.addEventListener('pointerup', this.handleUp);
     canvas.addEventListener('pointercancel', this.handleAbort);
     canvas.addEventListener('pointerleave', this.handleAbort);
+    canvas.addEventListener('contextmenu', this.handleContextMenu);
     document.addEventListener('keydown', this.handleKey);
   }
 
@@ -81,7 +82,18 @@ export class AimController {
 
   private handleDown = (e: PointerEvent) => {
     if (this.activeOwner === null || this.world === null) return;
+
+    // Right-click while aiming cancels the in-flight drag so the user can pick
+    // a different coin.
+    if (e.button === 2 && this.state.kind === 'dragging') {
+      e.preventDefault();
+      this.releaseCapture(this.state.pointerId);
+      this.state = { kind: 'idle' };
+      return;
+    }
+
     if (this.state.kind !== 'idle') return;
+    if (e.button !== 0) return;
     const screen = this.toScreen(e);
     const table = this.view.screenToTable(screen, this.world.table);
     const coin = this.hitTest(table);
@@ -95,6 +107,12 @@ export class AimController {
       current: screen,
       pointerId: e.pointerId,
     };
+  };
+
+  private handleContextMenu = (e: MouseEvent) => {
+    // Only suppress the native menu while the aim controller is active — that
+    // way right-click on the canvas can be used as a cancel gesture.
+    if (this.activeOwner !== null) e.preventDefault();
   };
 
   private handleMove = (e: PointerEvent) => {

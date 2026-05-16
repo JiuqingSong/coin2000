@@ -16,12 +16,12 @@ export interface WelcomeHandle {
   hide(): void;
 }
 
-type ModalKind = 'about' | 'replay' | 'quit';
+type ModalKind = 'about' | 'replay' | 'guide';
 
-const MODAL_CONFIG: Record<ModalKind, { titleKey: 'welcome.about.title' | 'welcome.replay.title' | 'welcome.quit.title'; bodyKey: 'welcome.about.body' | 'welcome.replay.body' | 'welcome.quit.body'; closable: boolean }> = {
+const MODAL_CONFIG: Record<ModalKind, { titleKey: 'welcome.about.title' | 'welcome.replay.title' | 'welcome.guide.title'; bodyKey: 'welcome.about.body' | 'welcome.replay.body' | 'welcome.guide.body'; closable: boolean; cardClass?: string }> = {
   about: { titleKey: 'welcome.about.title', bodyKey: 'welcome.about.body', closable: true },
   replay: { titleKey: 'welcome.replay.title', bodyKey: 'welcome.replay.body', closable: true },
-  quit: { titleKey: 'welcome.quit.title', bodyKey: 'welcome.quit.body', closable: false },
+  guide: { titleKey: 'welcome.guide.title', bodyKey: 'welcome.guide.body', closable: true, cardClass: 'guide' },
 };
 
 export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): WelcomeHandle {
@@ -39,12 +39,12 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
 
   const sidebar = document.createElement('aside');
   sidebar.className = 'welcome-sidebar';
-  const btnQuit = makeToolButton();
+  const btnGuide = makeToolButton();
   const btnSettings = makeToolButton();
   const btnAbout = makeToolButton();
   const btnLang = makeToolButton();
   btnLang.classList.add('lang');
-  sidebar.append(btnQuit, btnSettings, btnAbout, btnLang);
+  sidebar.append(btnGuide, btnSettings, btnAbout, btnLang);
 
   const main = document.createElement('div');
   main.className = 'welcome-main';
@@ -102,7 +102,7 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
     modal = document.createElement('div');
     modal.className = 'welcome-modal';
     const card = document.createElement('div');
-    card.className = 'welcome-modal-card';
+    card.className = 'welcome-modal-card' + (cfg.cardClass ? ' ' + cfg.cardClass : '');
     modalTitleEl = document.createElement('h3');
     modalTitleEl.textContent = t(cfg.titleKey);
     modalBodyEl = document.createElement('p');
@@ -121,7 +121,7 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
 
   const applyLocale = () => {
     titlebar.innerHTML = t('welcome.titlebar');
-    btnQuit.textContent = t('welcome.tool.quit');
+    btnGuide.textContent = t('welcome.tool.guide');
     btnSettings.textContent = t('welcome.tool.settings');
     btnAbout.textContent = t('welcome.tool.about');
     btnLang.textContent = t('welcome.tool.lang');
@@ -147,7 +147,7 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
   btnSettings.addEventListener('click', () => opts.onSettings());
   btnAbout.addEventListener('click', () => openModal('about'));
   btnReplay.addEventListener('click', () => openModal('replay'));
-  btnQuit.addEventListener('click', () => openModal('quit'));
+  btnGuide.addEventListener('click', () => openModal('guide'));
   btnLang.addEventListener('click', toggleLocale);
 
   return {

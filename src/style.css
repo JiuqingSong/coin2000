@@ -479,6 +479,17 @@ select:hover {
   text-align: center;
 }
 
+.welcome-modal-card.guide {
+  max-width: 560px;
+  max-height: 80vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.welcome-modal-card.guide p {
+  text-align: left;
+}
+
 .welcome-modal-card h3 {
   margin: 0 0 10px;
   font-size: 16px;

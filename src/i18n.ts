@@ -94,7 +94,7 @@ const ZH_STRINGS = {
 
   // welcome screen
   'welcome.titlebar': 'Song Studio<sup>®</sup> 系列产品',
-  'welcome.tool.quit': '结束',
+  'welcome.tool.guide': '说明',
   'welcome.tool.settings': '设置',
   'welcome.tool.about': '关于',
   'welcome.tool.lang': 'EN',
@@ -109,8 +109,29 @@ const ZH_STRINGS = {
     'COIN 2000  版本 2.61\n作者: Songthin\n版权所有 © 1995-2000 Song Studio\n\n浏览器移植版 · 2026',
   'welcome.replay.title': '放录相',
   'welcome.replay.body': '暂未实现。',
-  'welcome.quit.title': '感谢游玩',
-  'welcome.quit.body': '感谢游玩 COIN 2000。\n请关闭此标签页。',
+  'welcome.guide.title': '游戏说明',
+  'welcome.guide.body':
+    '■ 目标\n将对手的所有硬币撞下桌即获胜。若您先输光，则失败。\n\n' +
+    '■ 操作\n' +
+    '• 悬停在自己的硬币上，硬币变亮，表示可以操作。\n' +
+    '• 拖动硬币，向您希望飞行方向的反方向拖动后松开。\n' +
+    '• 拖得越远，力道越大；箭头显示方向和力度。\n' +
+    '• 拖动时按 Esc 取消本次射击。\n\n' +
+    '■ 棋子\n' +
+    '• 硬币（1 和 2）：双方棋子，将对手全部击落即获胜。\n' +
+    '• 石头：中立重物，可挡路、可作反弹，出界不会消失。\n' +
+    '• 炸弹：接触即爆炸，爆炸范围内的硬币全部消失。\n\n' +
+    '■ 边界\n' +
+    '• 灰色石墙：将硬币反弹回场内。\n' +
+    '• 红色死亡线：桌面边缘，越过红线的棋子坠落出局。\n\n' +
+    '■ 回合\n' +
+    '双方轮流出手。默认情况下，若本回合击落了对手且自己没有损失，您可继续出手；否则换对手出手（此规则可在「设置」中关闭）。\n\n' +
+    '■ 炸弹\n' +
+    '任何运动中的棋子接触炸弹都会立即引爆，爆炸范围内的硬币全部消失。开启「连锁爆破」后，一颗炸弹的爆炸可能引爆周围的其它炸弹。\n\n' +
+    '■ 技巧\n' +
+    '• 利用两侧石墙打反弹球，绕过中央障碍。\n' +
+    '• 把对手往红色死亡线推，而不仅是撞向它。\n' +
+    '• 炸弹同样会炸到自己的硬币，请保持距离。',
 
   // HUD
   'hud.count.p1': '玩家',
@@ -187,7 +208,7 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
 
   // welcome screen
   'welcome.titlebar': 'A Song Studio<sup>®</sup> Production',
-  'welcome.tool.quit': 'Quit',
+  'welcome.tool.guide': 'Guide',
   'welcome.tool.settings': 'Settings',
   'welcome.tool.about': 'About',
   'welcome.tool.lang': '日',
@@ -202,8 +223,29 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
     'COIN 2000  Version 2.61\nBy Songthin\nCopyright © 1995-2000 Song Studio\n\nBrowser port · 2026',
   'welcome.replay.title': 'Replay',
   'welcome.replay.body': 'Not implemented yet.',
-  'welcome.quit.title': 'Thanks for Playing',
-  'welcome.quit.body': 'Thanks for playing COIN 2000.\nPlease close this tab.',
+  'welcome.guide.title': 'How to Play',
+  'welcome.guide.body':
+    '■ Goal\nKnock all your opponent’s coins off the board to win. If you run out of coins first, you lose.\n\n' +
+    '■ Controls\n' +
+    '• Hover over one of your coins — it brightens to show it’s selectable.\n' +
+    '• Drag a coin in the direction opposite to where you want it to fly, then release.\n' +
+    '• Longer drag = stronger shot; the arrow shows direction and power.\n' +
+    '• Press Esc while dragging to cancel.\n\n' +
+    '■ Pieces\n' +
+    '• Coins (1 and 2): your team and your opponent’s — eliminate them all to win.\n' +
+    '• Stones: heavy neutral pieces. They block paths and bounce shots; never knocked out.\n' +
+    '• Bombs: explode on contact. Everything in the blast radius is destroyed.\n\n' +
+    '■ Walls\n' +
+    '• Stone walls: bounce coins back into play.\n' +
+    '• Red kill line: the edge of the table — pieces crossing the red line fall away for good.\n\n' +
+    '■ Turn order\n' +
+    'Players alternate. By default, if your shot eliminates at least one enemy coin and none of your own, you keep your turn; otherwise it passes to the opponent (this rule can be turned off in Settings).\n\n' +
+    '■ Bombs\n' +
+    'A bomb explodes the instant any moving piece touches it. The blast destroys every coin within its radius. With “Chain explosions” on, hitting one bomb can detonate neighboring bombs.\n\n' +
+    '■ Tips\n' +
+    '• Use the side walls to bank shots around stones.\n' +
+    '• Push enemies toward the red kill line, not just into stones.\n' +
+    '• Bombs hurt your own coins too — keep yours away.',
 
   // HUD
   'hud.count.p1': 'You',
@@ -280,7 +322,7 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
 
   // welcome screen
   'welcome.titlebar': 'Song Studio<sup>®</sup> シリーズ',
-  'welcome.tool.quit': '終了',
+  'welcome.tool.guide': '遊び方',
   'welcome.tool.settings': '設定',
   'welcome.tool.about': '情報',
   'welcome.tool.lang': '中',
@@ -295,8 +337,29 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
     'COIN 2000  バージョン 2.61\n作者: Songthin\nCopyright © 1995-2000 Song Studio\n\nブラウザ移植版 · 2026',
   'welcome.replay.title': 'リプレイ',
   'welcome.replay.body': '未実装です。',
-  'welcome.quit.title': 'ご利用ありがとうございました',
-  'welcome.quit.body': 'COIN 2000で遊んでくれてありがとう。\nこのタブを閉じてください。',
+  'welcome.guide.title': '遊び方',
+  'welcome.guide.body':
+    '■ 目的\n相手のコインをすべて盤外に落とせば勝利。先に自分のコインが尽きると負けです。\n\n' +
+    '■ 操作\n' +
+    '• 自分のコインにカーソルを合わせると明るくなり、選択可能になります。\n' +
+    '• 飛ばしたい方向の逆へドラッグし、離して発射。\n' +
+    '• 引く距離が長いほど強く飛びます。矢印で方向と力を表示。\n' +
+    '• ドラッグ中に Esc でキャンセル。\n\n' +
+    '■ 駒\n' +
+    '• コイン（1 と 2）：自分と相手の駒。全滅させれば勝ち。\n' +
+    '• 石：中立の重い駒。進路を塞ぎ、反射に使えます。盤外に落ちても消えません。\n' +
+    '• 爆弾：接触で爆発。爆発半径内のコインはすべて消滅します。\n\n' +
+    '■ 壁\n' +
+    '• 石壁：コインを盤内へ跳ね返します。\n' +
+    '• 赤いキルライン：盤の縁。赤線を越えた駒は落下して消えます。\n\n' +
+    '■ ターン\n' +
+    'プレイヤーは交互に行動します。標準設定では、相手のコインを撃ち落とし、自分のコインを落とさなければターンを継続できます（このルールは「設定」でオフにできます）。\n\n' +
+    '■ 爆弾\n' +
+    '動いている駒が爆弾に触れた瞬間に爆発し、爆発半径内のすべてのコインが消滅します。「連鎖爆発」を有効にすると、近隣の爆弾も誘爆します。\n\n' +
+    '■ ヒント\n' +
+    '• 横の石壁を使って反射ショットで石を回り込ませる。\n' +
+    '• 相手をキルラインへ押し出す。\n' +
+    '• 爆弾は味方も巻き込みます。自分のコインを近づけすぎないこと。',
 
   // HUD
   'hud.count.p1': 'あなた',

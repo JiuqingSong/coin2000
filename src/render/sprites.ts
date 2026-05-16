@@ -8,7 +8,6 @@ import { EXPLODE_TICKS } from '../game/constants';
 const WALL_THICKNESS = 4;
 const STONE_COLOR = '#c84acb';
 const BOMB_OUTER = '#222222';
-const BOMB_INNER = '#f5e8cb';
 
 let wallPattern: CanvasPattern | null = null;
 let feltPattern: CanvasPattern | null = null;
@@ -265,18 +264,71 @@ function drawCoin(ctx: CanvasRenderingContext2D, coin: Coin, active: boolean, ho
 
   shadow(ctx, x, y, r);
 
+  // Body
   ctx.fillStyle = base;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
 
-  applyBevel(ctx, x, y, r);
-
-  ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-  ctx.lineWidth = 1.2;
+  // Metallic specular highlight (top-left lit)
+  const spec = ctx.createRadialGradient(x - r * 0.45, y - r * 0.55, r * 0.05, x, y, r);
+  spec.addColorStop(0, 'rgba(255,255,255,0.7)');
+  spec.addColorStop(0.35, 'rgba(255,255,255,0.18)');
+  spec.addColorStop(0.7, 'rgba(255,255,255,0)');
+  ctx.fillStyle = spec;
   ctx.beginPath();
-  ctx.moveTo(x, y - r + 2);
-  ctx.lineTo(x, y - r + 6);
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rim shading (darker around the edge → sphere/disc feel)
+  const rim = ctx.createRadialGradient(x, y, r * 0.7, x, y, r);
+  rim.addColorStop(0, 'rgba(0,0,0,0)');
+  rim.addColorStop(1, 'rgba(0,0,0,0.35)');
+  ctx.fillStyle = rim;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Reeded (milled) edge ticks
+  const ticks = 18;
+  ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+  ctx.lineWidth = 0.7;
+  for (let i = 0; i < ticks; i++) {
+    const ang = (i / ticks) * Math.PI * 2;
+    const cx = Math.cos(ang);
+    const sy = Math.sin(ang);
+    ctx.beginPath();
+    ctx.moveTo(x + cx * (r - 1.8), y + sy * (r - 1.8));
+    ctx.lineTo(x + cx * (r - 0.3), y + sy * (r - 0.3));
+    ctx.stroke();
+  }
+
+  // Inner ring (raised rim border)
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.arc(x, y, r - 2.2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.arc(x, y, r - 2.8, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Embossed "1" / "2" stamp
+  const label = coin.owner === Owner.P1 ? '1' : '2';
+  ctx.font = `bold ${Math.round(r * 1.15)}px "Trebuchet MS", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillText(label, x, y + 1);
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.fillText(label, x, y);
+
+  // Outer dark outline
+  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.arc(x, y, r - 0.3, 0, Math.PI * 2);
   ctx.stroke();
 
   if (active) {
@@ -294,17 +346,74 @@ function drawStone(ctx: CanvasRenderingContext2D, coin: Coin): void {
 
   shadow(ctx, x, y, r);
 
+  // Base body
   ctx.fillStyle = STONE_COLOR;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
 
-  applyBevel(ctx, x, y, r);
-
-  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-  ctx.lineWidth = 1;
+  // Mottled texture, clipped to the stone circle. Seeded by coin.id so it's
+  // stable across frames (and different per stone).
+  ctx.save();
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.clip();
+
+  const rand = seededRandom(coin.id * 7919 + 13);
+
+  // Soft tinted blobs — lighter & darker patches.
+  for (let i = 0; i < 9; i++) {
+    const px = x + (rand() - 0.5) * r * 1.8;
+    const py = y + (rand() - 0.5) * r * 1.8;
+    const pr = r * (0.22 + rand() * 0.45);
+    const darkBlob = rand() < 0.5;
+    ctx.fillStyle = darkBlob
+      ? `rgba(60,20,60,${(0.10 + rand() * 0.12).toFixed(3)})`
+      : `rgba(255,220,255,${(0.06 + rand() * 0.10).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.arc(px, py, pr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Grit speckles.
+  for (let i = 0; i < 14; i++) {
+    const px = x + (rand() - 0.5) * r * 1.9;
+    const py = y + (rand() - 0.5) * r * 1.9;
+    ctx.fillStyle = `rgba(0,0,0,${(0.18 + rand() * 0.22).toFixed(3)})`;
+    ctx.fillRect(px, py, 1, 1);
+  }
+
+  // A short hairline crack — adds character.
+  const crackAng = rand() * Math.PI * 2;
+  const crackR = r * (0.5 + rand() * 0.3);
+  const cx0 = x + Math.cos(crackAng) * crackR * 0.2;
+  const cy0 = y + Math.sin(crackAng) * crackR * 0.2;
+  const cx1 = x + Math.cos(crackAng) * crackR;
+  const cy1 = y + Math.sin(crackAng) * crackR;
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+  ctx.lineWidth = 0.7;
+  ctx.beginPath();
+  ctx.moveTo(cx0, cy0);
+  ctx.lineTo(cx1 + (rand() - 0.5) * 1.5, cy1 + (rand() - 0.5) * 1.5);
+  ctx.stroke();
+
+  ctx.restore();
+
+  // 3D shading: bright top-left, dark bottom-right.
+  const shade = ctx.createRadialGradient(x - r * 0.45, y - r * 0.5, r * 0.1, x, y, r);
+  shade.addColorStop(0, 'rgba(255,255,255,0.35)');
+  shade.addColorStop(0.55, 'rgba(255,255,255,0)');
+  shade.addColorStop(1, 'rgba(0,0,0,0.4)');
+  ctx.fillStyle = shade;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Crisp dark outline.
+  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.arc(x, y, r - 0.3, 0, Math.PI * 2);
   ctx.stroke();
 }
 
@@ -314,29 +423,77 @@ function drawBomb(ctx: CanvasRenderingContext2D, coin: Coin): void {
 
   shadow(ctx, x, y, r);
 
-  // outer dark casing
-  ctx.fillStyle = BOMB_OUTER;
+  // Cannonball body — very dark base.
+  ctx.fillStyle = '#1a1a1a';
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
 
-  // inner light core (fuse marker)
-  ctx.fillStyle = BOMB_INNER;
-  ctx.beginPath();
-  ctx.arc(x, y, r * 0.45, 0, Math.PI * 2);
-  ctx.fill();
-
-  // small fuse spark dot at top
-  ctx.fillStyle = '#ff9a3c';
-  ctx.beginPath();
-  ctx.arc(x, y - r + 2, 1.6, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.strokeStyle = 'rgba(0,0,0,0.9)';
-  ctx.lineWidth = 1;
+  // Rim shading darkens the perimeter, giving sphere depth.
+  const rim = ctx.createRadialGradient(x, y, r * 0.55, x, y, r);
+  rim.addColorStop(0, 'rgba(0,0,0,0)');
+  rim.addColorStop(1, 'rgba(0,0,0,0.85)');
+  ctx.fillStyle = rim;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Glossy specular highlight (top-left).
+  const spec = ctx.createRadialGradient(
+    x - r * 0.4, y - r * 0.5, r * 0.05,
+    x - r * 0.3, y - r * 0.4, r * 0.55,
+  );
+  spec.addColorStop(0, 'rgba(255,255,255,0.85)');
+  spec.addColorStop(0.4, 'rgba(255,255,255,0.18)');
+  spec.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = spec;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Fuse hole — small dark disc near the top.
+  const holeX = x;
+  const holeY = y - r + 2.5;
+  ctx.fillStyle = '#0a0a0a';
+  ctx.beginPath();
+  ctx.arc(holeX, holeY, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Short fuse stub angling up & right — drawn just inside the circle.
+  const tipX = x + r * 0.4;
+  const tipY = y - r * 0.7;
+  ctx.strokeStyle = '#b3923d';
+  ctx.lineWidth = 1.4;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(holeX, holeY);
+  ctx.quadraticCurveTo(holeX + 1, holeY - 2, tipX, tipY);
   ctx.stroke();
+
+  // Spark glow at the fuse tip.
+  const sparkGrad = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, r * 0.55);
+  sparkGrad.addColorStop(0, 'rgba(255,250,180,1)');
+  sparkGrad.addColorStop(0.35, 'rgba(255,160,40,0.85)');
+  sparkGrad.addColorStop(1, 'rgba(255,60,0,0)');
+  ctx.fillStyle = sparkGrad;
+  ctx.beginPath();
+  ctx.arc(tipX, tipY, r * 0.55, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Outline.
+  ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.arc(x, y, r - 0.3, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function seededRandom(seed: number): () => number {
+  let s = (seed | 0) || 1;
+  return () => {
+    s = (s * 9301 + 49297) & 0x7fffffff;
+    return s / 0x7fffffff;
+  };
 }
 
 function drawExplosion(ctx: CanvasRenderingContext2D, coin: Coin): void {
@@ -373,27 +530,6 @@ function shadow(ctx: CanvasRenderingContext2D, x: number, y: number, r: number):
   ctx.beginPath();
   ctx.ellipse(x + 1, y + 2, r * 0.95, r * 0.55, 0, 0, Math.PI * 2);
   ctx.fill();
-}
-
-function applyBevel(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
-  const grad = ctx.createRadialGradient(x - r * 0.4, y - r * 0.5, 1, x, y, r);
-  grad.addColorStop(0, 'rgba(255,255,255,0.55)');
-  grad.addColorStop(0.55, 'rgba(255,255,255,0.0)');
-  grad.addColorStop(1, 'rgba(0,0,0,0.25)');
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.lineWidth = 1.2;
-  ctx.strokeStyle = 'rgba(255,255,255,0.75)';
-  ctx.beginPath();
-  ctx.arc(x, y, r - 2, Math.PI * 1.25, Math.PI * 0.25);
-  ctx.stroke();
-  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-  ctx.beginPath();
-  ctx.arc(x, y, r - 2, Math.PI * 0.25, Math.PI * 1.25);
-  ctx.stroke();
 }
 
 function lighten(hex: string, amount: number): string {
