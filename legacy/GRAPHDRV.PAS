@@ -784,7 +784,7 @@ procedure InitAll;
       else writeln('Cannot initialize Chinese system. TURBOHZ1 not found. Error 2')
     end else iChinese:=true;
     r.assign(100,460,0,0,0);
-    chineseinputbox:=new(PChineseInputBox,init(R,'py.mb','ȫƴ',kbAltF2));
+    chineseinputbox:=new(PChineseInputBox,init(R,'py.mb','全拼',kbAltF2));
     chinese2:=chineseinputbox;
   end;
 

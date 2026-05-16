@@ -313,7 +313,7 @@ begin
   menu:=new(PMenu,init(r,$70,'',m));
   insert(menu);
   r.assign(bouns.b.x-charsize*2,0,0,0,0);
-  new(Button,init(r,'¬¨',cmListOpen,kbNoKey,@self));
+  new(Button,init(r,'îƒƒ',cmListOpen,kbNoKey,@self));
   insert(button);
   if (m<>nil) and (m^.caption<>nil) then begin
     r.assign(0,0,bouns.b.x-charsize*2-1,bouns.b.y,0);

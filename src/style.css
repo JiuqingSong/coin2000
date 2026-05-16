@@ -1,0 +1,52 @@
+:root {
+  color-scheme: dark;
+  --bg: #1a1d22;
+  --fg: #e6e8eb;
+  --muted: #8a8f98;
+  --accent: #6db4ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.4 system-ui, -apple-system, sans-serif;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#chrome {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border-bottom: 1px solid #2a2e34;
+}
+
+#stage {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+
+#board {
+  flex: 1 1 auto;
+  display: block;
+  background: #0e1115;
+}
+
+#hud {
+  flex: 0 0 220px;
+  border-left: 1px solid #2a2e34;
+  padding: 12px;
+  overflow: auto;
+}

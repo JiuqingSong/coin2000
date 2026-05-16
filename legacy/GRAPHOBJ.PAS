@@ -571,7 +571,7 @@ begin
   drawline(x,y,x+2*charsize-1,y+2*charsize-1,0,8,15,-1);
   drawline(x+1,y+1,x+2*charsize-2,y+2*charsize-2,0,0,7,15);
   if valid then npLabel(caption^,x+2*charsize,y,0,4);
-  if enabled then np('¨•',x,y,color mod 16);
+  if enabled then np('ÓÉÄ',x,y,color mod 16);
   mshow;
 end;
 
@@ -637,7 +637,7 @@ begin
   TGroup.init(r,co);
   if showclosebutton then begin
     rect.assign(bouns.b.x-charsize*2,4-charsize div 2,0,0,3-charsize div 2);
-    new(CloseButton,init(rect,'°¡',cmClose,kbAltF4,@self));
+    new(CloseButton,init(rect,'√ó',cmClose,kbAltF4,@self));
     insert(closebutton);
   end else closebutton:=nil;
   if showclosebutton then rect.assign(0,0,bouns.b.x-16,15,0)
@@ -1016,17 +1016,17 @@ begin
     re.assign(17,1,bouns.b.x-17,bouns.b.y-1,1);
     new(MoveBox,init(re,c,14,bouns.b.y-2,amin,0,amin,0,amax,0,p));
     re.assign(1,1,14,bouns.b.y-1,0);
-    new(Button1,init(re,'¨°',cmMoveBoxLeft,MoveBox));
+    new(Button1,init(re,'ÓÇº',cmMoveBoxLeft,MoveBox));
     re.assign(bouns.b.x-14,1,bouns.b.x-1,bouns.b.y-1,0);
-    new(Button2,init(re,'¨¢',cmMoveBoxRight,MoveBox));
+    new(Button2,init(re,'ÓÇΩ',cmMoveBoxRight,MoveBox));
   end else begin
     bouns.b.x:=16;
     re.assign(1,17,bouns.b.x-1,bouns.b.y-17,1);
     new(MoveBox,init(re,c,bouns.b.x-2,14,0,amin,0,amin,0,amax,p));;
     re.assign(1,1,bouns.b.x-1,14,0);
-    new(Button1,init(re,'¨£',cmMoveBoxUp,MoveBox));
+    new(Button1,init(re,'ÓÇæ',cmMoveBoxUp,MoveBox));
     re.assign(1,bouns.b.y-14,bouns.b.x-1,bouns.b.y-1,0);
-    new(Button2,init(re,'¨§',cmMoveBoxDown,MoveBox));
+    new(Button2,init(re,'ÓÇø',cmMoveBoxDown,MoveBox));
   end;
   insert(MoveBox);
   insert(Button1);
@@ -1129,9 +1129,9 @@ begin
   v:=validvalue(avalue,min,max);
   if astep>0 then step:=astep else step:=1;
   r.assign(bouns.b.x-2*charsize+1,0,bouns.b.x,bouns.b.y div 2-2,2);
-  new(buttonU,init(r,'¨¶',cmMoveBoxUp,@Self));
+  new(buttonU,init(r,'ÓÉÅ',cmMoveBoxUp,@Self));
   r.assign(bouns.b.x-2*charsize+1,bouns.b.y div 2+3,bouns.b.x,bouns.b.y,2);
-  new(buttonD,init(r,'¨ß',cmMoveBoxDown,@self));
+  new(buttonD,init(r,'ÓÉÇ',cmMoveBoxDown,@self));
   r.assign(0,0,bouns.b.x-2*charsize-4,bouns.b.y,2);
   new(number,init(r,(bouns.b.x-2*charsize-4) div charsize,stri(v),c,[45,48..57]));
   insert(buttonu);
@@ -1550,13 +1550,13 @@ begin
   ValidColor:=vc;
   for t:=0 to 3 do for tt:=0 to 3 do if t*4+tt in validcolor then begin
     re.assign(tt*20+1,t*20+1,0,0,1);
-    b:=new(PToolButton,init(re,(t*4+tt)*16,' ','µ⁄'+stri(t*4+tt)+'∫≈—’…´',cmColor0+t*4+tt,pan));
+    b:=new(PToolButton,init(re,(t*4+tt)*16,' ','Á¨¨'+stri(t*4+tt)+'Âè∑È¢úËâ≤',cmColor0+t*4+tt,pan));
     Pan^.insert(b);
     b^.bouns.b.x:=17;
     b^.bouns.b.y:=17;
   end;
   re.assign(r.b.x-charsize*2,0,r.b.x,r.b.y-2,0);
-  new(Button,init(re,'¨ß',cmColorTableOpen,kbNoKey,@self));
+  new(Button,init(re,'ÓÉÇ',cmColorTableOpen,kbNoKey,@self));
   insert(Button);
   valid:=true;
   active:=true;

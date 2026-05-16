@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(git --version)",
+      "Bash(iconv --version)",
+      "Bash(git mv *)",
+      "Bash(iconv -c -f GB18030 -t UTF-8 COIN2000.PAS)",
+      "Bash(echo \"iconv exit: $?\")",
+      "Read(//tmp/**)",
+      "Bash(mv /tmp/out.utf8 COIN2000.PAS)",
+      "Bash(sed -n '107p' COIN2000.PAS)",
+      "Bash(npm install *)",
+      "Bash(npm run *)"
+    ]
+  }
+}
