@@ -9,6 +9,7 @@ import { createCanvasView } from './render/canvas';
 import { mountChrome, type P2Mode } from './ui/chrome';
 import { mountHud } from './ui/hud';
 import { mountReactions } from './ui/reactions';
+import { mountWelcome } from './ui/welcome';
 
 const board = document.getElementById('board') as HTMLCanvasElement | null;
 const chromeEl = document.getElementById('chrome');
@@ -88,4 +89,9 @@ mountChrome(chromeEl, {
   onRestart: restart,
 });
 
-engine.start();
+const welcome = mountWelcome(document.body, {
+  onStart: () => {
+    welcome.hide();
+    engine.start();
+  },
+});
