@@ -10,12 +10,21 @@ import { roundEnded, type RoundResult } from './rules';
 import { initialWorld } from './setup';
 import { draw } from '../render/renderer';
 
+export interface TurnSettled {
+  shooter: Owner;
+  killedP1: number;
+  killedP2: number;
+}
+
 export interface EngineOptions {
   view: CanvasView;
   aim: AimController;
   bell?: Bell;
   buildPlayer(owner: Owner): Player;
   onFrame?(world: World): void;
+  onTurnStart?(owner: Owner): void;
+  onShotFired?(shooter: Owner): void;
+  onTurnSettled?(info: TurnSettled): void;
   onRoundEnd?(result: RoundResult): void;
 }
 
@@ -26,6 +35,9 @@ export class Engine {
   private acc = 0;
   private running = false;
   private readonly events: PhysicsEvents | undefined;
+  private shooter: Owner | null = null;
+  private preShotP1 = 0;
+  private preShotP2 = 0;
 
   constructor(private readonly opts: EngineOptions) {
     this.world = initialWorld();
@@ -48,7 +60,9 @@ export class Engine {
     this.world.current = Owner.P1;
     this.last = null;
     this.acc = 0;
+    this.shooter = null;
     this.players[this.world.current].startTurn(this.world, this.onShoot);
+    this.opts.onTurnStart?.(this.world.current);
     if (!this.running) {
       this.running = true;
       requestAnimationFrame(this.tick);
@@ -60,7 +74,10 @@ export class Engine {
       this.world.phase === Phase.Aiming && this.world.current === owner;
     if (wasActive) this.players[owner].cancelTurn();
     this.players[owner] = player;
-    if (wasActive) player.startTurn(this.world, this.onShoot);
+    if (wasActive) {
+      player.startTurn(this.world, this.onShoot);
+      this.opts.onTurnStart?.(owner);
+    }
   }
 
   private tick = (now: number) => {
@@ -90,12 +107,25 @@ export class Engine {
     if (this.world.phase !== Phase.Aiming) return;
     const c = this.world.coins[coinId];
     if (!c || !c.alive || c.owner !== this.world.current) return;
+    this.shooter = this.world.current;
+    this.preShotP1 = this.world.aliveCount[Owner.P1];
+    this.preShotP2 = this.world.aliveCount[Owner.P2];
     c.vel = { x: vel.x, y: vel.y };
     this.world.phase = Phase.Simulating;
     this.opts.bell?.ringShoot();
+    this.opts.onShotFired?.(this.shooter);
   };
 
   private onSettled(): void {
+    if (this.shooter !== null) {
+      this.opts.onTurnSettled?.({
+        shooter: this.shooter,
+        killedP1: this.preShotP1 - this.world.aliveCount[Owner.P1],
+        killedP2: this.preShotP2 - this.world.aliveCount[Owner.P2],
+      });
+      this.shooter = null;
+    }
+
     const result = roundEnded(this.world);
     if (result) {
       this.world.phase = Phase.RoundEnd;
@@ -105,5 +135,6 @@ export class Engine {
     this.world.current = this.world.current === Owner.P1 ? Owner.P2 : Owner.P1;
     this.world.phase = Phase.Aiming;
     this.players[this.world.current].startTurn(this.world, this.onShoot);
+    this.opts.onTurnStart?.(this.world.current);
   }
 }

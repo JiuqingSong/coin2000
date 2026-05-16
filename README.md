@@ -2,7 +2,7 @@
 
 A browser port of the 1995 Turbo Pascal game **COIN 2000** (Song Studio / Song Jiuqing). Two players take turns flicking coins across a table — knock the other side's coins off the top or bottom edge to win.
 
-Play it: _(GitHub Pages URL once the first deploy lands)_
+Play it: <https://jiuqingsong.github.io/coin2000/>
 
 ## Controls
 

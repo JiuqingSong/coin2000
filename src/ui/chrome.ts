@@ -11,21 +11,21 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): void {
 
   const title = document.createElement('div');
   title.className = 'title';
-  title.textContent = 'COIN 2000';
+  title.textContent = 'COIN 2000 · 弹硬币';
 
   const controls = document.createElement('div');
   controls.className = 'controls';
 
   const p2Label = document.createElement('label');
-  p2Label.append('P2');
+  p2Label.append('对手');
 
   const select = document.createElement('select');
   const optAi = document.createElement('option');
   optAi.value = 'ai';
-  optAi.textContent = 'Computer';
+  optAi.textContent = '电脑';
   const optHuman = document.createElement('option');
   optHuman.value = 'human';
-  optHuman.textContent = 'Human';
+  optHuman.textContent = '玩家';
   select.append(optAi, optHuman);
   select.value = opts.initialP2Mode;
   select.addEventListener('change', () => {
@@ -35,7 +35,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): void {
 
   const restart = document.createElement('button');
   restart.type = 'button';
-  restart.textContent = 'Restart';
+  restart.textContent = '重新开始';
   restart.addEventListener('click', opts.onRestart);
 
   controls.append(p2Label, restart);

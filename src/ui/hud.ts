@@ -24,8 +24,8 @@ export function mountHud(
 
   const counts = document.createElement('div');
   counts.className = 'counts';
-  const p1 = makeCount('P1', 'p1');
-  const p2 = makeCount('P2', 'p2');
+  const p1 = makeCount('玩家', 'p1');
+  const p2 = makeCount(labelForP2(initialP2Mode), 'p2');
   counts.append(p1.row, p2.row);
 
   const status = document.createElement('div');
@@ -42,7 +42,7 @@ export function mountHud(
   banter.className = 'banter';
   const playAgain = document.createElement('button');
   playAgain.type = 'button';
-  playAgain.textContent = 'Play Again';
+  playAgain.textContent = '再来一局';
   playAgain.addEventListener('click', onPlayAgain);
   card.append(winnerText, banter, playAgain);
   overlayRoot.append(card);
@@ -66,7 +66,7 @@ export function mountHud(
   return {
     update(world: World) {
       lastWorld = world;
-      const { text: pillText, cls: pillClass } = pillFor(world);
+      const { text: pillText, cls: pillClass } = pillFor(world, p2Mode);
       if (pillText !== lastPillText) {
         pill.textContent = pillText;
         lastPillText = pillText;
@@ -85,17 +85,19 @@ export function mountHud(
     },
     setP2Mode(mode: P2Mode) {
       p2Mode = mode;
+      p2.label.textContent = labelForP2(mode);
+      lastPillText = '';
       refreshStatus(lastWorld);
     },
     showResult(result: RoundResult) {
       if (result.winner === 'draw') {
-        winnerText.textContent = 'Draw';
+        winnerText.textContent = '平局';
         winnerText.className = 'winner draw';
       } else if (result.winner === Owner.P1) {
-        winnerText.textContent = 'P1 wins';
+        winnerText.textContent = '您获胜';
         winnerText.className = 'winner p1';
       } else {
-        winnerText.textContent = 'P2 wins';
+        winnerText.textContent = p2Mode === 'ai' ? '电脑获胜' : '对手获胜';
         winnerText.className = 'winner p2';
       }
       banter.textContent = pickBanter(result);
@@ -110,21 +112,21 @@ export function mountHud(
 }
 
 const BANTER_P1 = [
-  'Crushing victory.',
-  'P1 takes the table.',
-  'Clean sweep.',
-  'P2 had no answer.',
+  '酷毙了，您消灭了电脑的全部硬币，获得最终胜利！',
+  '您赢了，算您厉害，今天就先放过电脑。',
+  '电脑已经输光了，您还真是厉害，服了。',
+  '完胜！来日方长。',
 ];
 const BANTER_P2 = [
-  'P2 takes it.',
-  'A measured win.',
-  'P1 left the table empty.',
-  'Outshot and outplayed.',
+  '您已经没有硬币了。胜败乃兵家常事，来日方长。',
+  '您已经输光了。还要努力啊！',
+  '没办法，谁让电脑这么厉害呢。',
+  '明天把改错交上来。',
 ];
 const BANTER_DRAW = [
-  'Mutually assured oblivion.',
-  'Nobody left standing.',
-  'A draw — both tables run dry.',
+  '两败俱伤。',
+  '桌上无人生还。',
+  '平局——两边都打光了。',
 ];
 
 function pickBanter(result: RoundResult): string {
@@ -133,6 +135,10 @@ function pickBanter(result: RoundResult): string {
     result.winner === Owner.P2 ? BANTER_P2 :
     BANTER_DRAW;
   return pool[Math.floor(Math.random() * pool.length)]!;
+}
+
+function labelForP2(mode: P2Mode): string {
+  return mode === 'ai' ? '电脑' : '对手';
 }
 
 function makeCount(label: string, side: 'p1' | 'p2') {
@@ -145,29 +151,29 @@ function makeCount(label: string, side: 'p1' | 'p2') {
   value.className = 'value';
   value.textContent = '0';
   row.append(labelEl, value);
-  return { row, value };
+  return { row, label: labelEl, value };
 }
 
-function pillFor(world: World): { text: string; cls: string } {
+function pillFor(world: World, p2Mode: P2Mode): { text: string; cls: string } {
   switch (world.phase) {
-    case Phase.Idle: return { text: 'Idle', cls: '' };
+    case Phase.Idle: return { text: '准备中', cls: '' };
     case Phase.Aiming:
       return world.current === Owner.P1
-        ? { text: "P1's turn", cls: 'p1' }
-        : { text: "P2's turn", cls: 'p2' };
-    case Phase.Simulating: return { text: 'Resolving…', cls: '' };
-    case Phase.RoundEnd: return { text: 'Round over', cls: '' };
+        ? { text: '您的回合', cls: 'p1' }
+        : { text: p2Mode === 'ai' ? '电脑回合' : '对手回合', cls: 'p2' };
+    case Phase.Simulating: return { text: '运动中…', cls: '' };
+    case Phase.RoundEnd: return { text: '本局结束', cls: '' };
   }
 }
 
 function statusFor(world: World, p2Mode: P2Mode): string {
   if (world.phase === Phase.Aiming) {
-    if (world.current === Owner.P1) return 'Drag a P1 coin to aim. Release to shoot.';
+    if (world.current === Owner.P1) return '拖动您的硬币瞄准，松开发射。';
     return p2Mode === 'ai'
-      ? 'P2 is thinking…'
-      : 'Drag a P2 coin to aim. Release to shoot.';
+      ? '电脑思考中……'
+      : '拖动对手的硬币瞄准，松开发射。';
   }
-  if (world.phase === Phase.Simulating) return 'Coins in motion.';
-  if (world.phase === Phase.RoundEnd) return 'Round over.';
+  if (world.phase === Phase.Simulating) return '硬币运动中。';
+  if (world.phase === Phase.RoundEnd) return '本局结束。';
   return '';
 }

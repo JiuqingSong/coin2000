@@ -11,8 +11,9 @@ export function draw(view: CanvasView, world: World, aim: AimPreview | null = nu
 
   view.applyTableTransform(world.table);
   drawTable(view.ctx, world.table);
+  const activeId = aim?.coinId ?? null;
   for (const coin of world.coins) {
-    drawCoin(view.ctx, coin);
+    drawCoin(view.ctx, coin, coin.id === activeId);
   }
   if (aim) drawAim(view.ctx, aim);
 }
