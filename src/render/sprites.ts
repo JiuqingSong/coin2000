@@ -1,16 +1,7 @@
 import type { Coin } from '../game/coin';
 import type { Table } from '../game/table';
 import { Owner } from '../game/types';
-
-const OWNER_COLOR: Record<Owner, string> = {
-  [Owner.P1]: '#4aa3ff',
-  [Owner.P2]: '#ff6b5a',
-};
-
-const OWNER_ACTIVE_COLOR: Record<Owner, string> = {
-  [Owner.P1]: '#8ac6ff',
-  [Owner.P2]: '#ff9a8a',
-};
+import { config } from '../game/config';
 
 const WALL_THICKNESS = 4;
 
@@ -28,7 +19,6 @@ function getWallPattern(ctx: CanvasRenderingContext2D): CanvasPattern | null {
   tctx.strokeStyle = '#222831';
   tctx.lineWidth = 1.4;
   tctx.beginPath();
-  // diagonal stripes (top-left to bottom-right repeat)
   tctx.moveTo(-2, 4); tctx.lineTo(4, -2);
   tctx.moveTo(0, 6);  tctx.lineTo(6, 0);
   tctx.moveTo(2, 8);  tctx.lineTo(8, 2);
@@ -52,7 +42,6 @@ export function drawTable(ctx: CanvasRenderingContext2D, table: Table): void {
     ctx.fillRect(table.width - WALL_THICKNESS, 0, WALL_THICKNESS, table.height);
   }
 
-  // 3D edge: light inner line, dark outer line on each wall
   ctx.lineWidth = 1;
   ctx.strokeStyle = 'rgba(255,255,255,0.18)';
   ctx.beginPath();
@@ -69,7 +58,6 @@ export function drawTable(ctx: CanvasRenderingContext2D, table: Table): void {
   ctx.lineTo(table.width - 0.5, table.height);
   ctx.stroke();
 
-  // table outline (top & bottom) — kill edges, in a warmer tone
   ctx.strokeStyle = '#8a3a2e';
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -82,21 +70,19 @@ export function drawCoin(ctx: CanvasRenderingContext2D, coin: Coin, active = fal
   if (!coin.alive) return;
   const { x, y } = coin.pos;
   const r = coin.radius;
-  const base = active ? OWNER_ACTIVE_COLOR[coin.owner] : OWNER_COLOR[coin.owner];
+  const ownerColor = coin.owner === Owner.P1 ? config.p1Color : config.p2Color;
+  const base = active ? lighten(ownerColor, 0.18) : ownerColor;
 
-  // soft cast shadow under coin
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.beginPath();
   ctx.ellipse(x + 1, y + 2, r * 0.95, r * 0.55, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // base disc
   ctx.fillStyle = base;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
 
-  // radial gradient (highlight top-left)
   const grad = ctx.createRadialGradient(x - r * 0.4, y - r * 0.5, 1, x, y, r);
   grad.addColorStop(0, 'rgba(255,255,255,0.55)');
   grad.addColorStop(0.55, 'rgba(255,255,255,0.0)');
@@ -106,7 +92,6 @@ export function drawCoin(ctx: CanvasRenderingContext2D, coin: Coin, active = fal
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
 
-  // inner bevel arcs (3D highlight + shadow) — mirrors Pascal arc 45..225 / 225..45
   ctx.lineWidth = 1.2;
   ctx.strokeStyle = 'rgba(255,255,255,0.75)';
   ctx.beginPath();
@@ -117,14 +102,12 @@ export function drawCoin(ctx: CanvasRenderingContext2D, coin: Coin, active = fal
   ctx.arc(x, y, r - 2, Math.PI * 0.25, Math.PI * 1.25);
   ctx.stroke();
 
-  // outer edge
   ctx.lineWidth = 1;
   ctx.strokeStyle = 'rgba(0,0,0,0.7)';
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.stroke();
 
-  // slot marker on top — matches Pascal `drawline(x-1, y-5, x+1, y, 0, 15, 8, -1)`
   ctx.strokeStyle = 'rgba(0,0,0,0.85)';
   ctx.lineWidth = 1.2;
   ctx.beginPath();
@@ -139,4 +122,15 @@ export function drawCoin(ctx: CanvasRenderingContext2D, coin: Coin, active = fal
     ctx.arc(x, y, r + 2, 0, Math.PI * 2);
     ctx.stroke();
   }
+}
+
+function lighten(hex: string, amount: number): string {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return hex;
+  const n = parseInt(m[1]!, 16);
+  const r = (n >> 16) & 0xff;
+  const g = (n >> 8) & 0xff;
+  const b = n & 0xff;
+  const mix = (c: number) => Math.round(c + (255 - c) * amount);
+  return '#' + ((mix(r) << 16) | (mix(g) << 8) | mix(b)).toString(16).padStart(6, '0');
 }

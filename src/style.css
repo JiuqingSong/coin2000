@@ -449,3 +449,106 @@ select:hover {
   border-bottom-color: #ffffff;
   border-right-color: #ffffff;
 }
+
+/* --- Config modal --- */
+
+#config-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', system-ui, sans-serif;
+  color: #111;
+}
+
+#config-modal[hidden] {
+  display: none;
+}
+
+.config-card {
+  background: #ececec;
+  border: 2px solid #000;
+  box-shadow: 6px 6px 0 #000;
+  padding: 18px 22px 16px;
+  width: 460px;
+  max-width: 94vw;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.config-card h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+
+.config-section {
+  margin: 0 0 10px;
+  padding: 6px 12px 10px;
+  background: #ffffff;
+  border: 1px solid #888;
+}
+
+.config-section legend {
+  padding: 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.config-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  font-size: 13px;
+}
+
+.config-row > input[type='range'] {
+  flex: 1;
+}
+
+.config-row.checkbox {
+  gap: 6px;
+}
+
+.config-value {
+  min-width: 28px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: #333;
+}
+
+.config-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.config-actions button {
+  background: #d8d8d8;
+  color: #000;
+  border: 2px solid #000;
+  border-top-color: #ffffff;
+  border-left-color: #ffffff;
+  padding: 6px 18px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 2px;
+}
+
+.config-actions button.primary {
+  background: #fff4a8;
+}
+
+.config-actions button:active {
+  border-top-color: #000;
+  border-left-color: #000;
+  border-bottom-color: #ffffff;
+  border-right-color: #ffffff;
+}

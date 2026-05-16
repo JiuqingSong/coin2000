@@ -1,5 +1,6 @@
 export interface WelcomeOptions {
   onStart(): void;
+  onSettings(): void;
 }
 
 export interface WelcomeHandle {
@@ -23,8 +24,9 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
   const sidebar = document.createElement('aside');
   sidebar.className = 'welcome-sidebar';
   const btnQuit = makeToolButton('结束');
+  const btnSettings = makeToolButton('设置');
   const btnAbout = makeToolButton('关于');
-  sidebar.append(btnQuit, btnAbout);
+  sidebar.append(btnQuit, btnSettings, btnAbout);
 
   const main = document.createElement('div');
   main.className = 'welcome-main';
@@ -90,6 +92,7 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
   };
 
   btnStart.addEventListener('click', () => opts.onStart());
+  btnSettings.addEventListener('click', () => opts.onSettings());
   btnAbout.addEventListener('click', () => {
     openModal(
       '关于',

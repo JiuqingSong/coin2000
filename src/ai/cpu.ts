@@ -1,6 +1,6 @@
 import type { World } from '../game/world';
 import { type CoinId, type Vec2 } from '../game/types';
-import { AI_ANGLE_SAMPLES, MAX_SHOT_SPEED } from '../game/constants';
+import { config } from '../game/config';
 import { simulate } from './simulate';
 
 export interface ChosenShot {
@@ -10,6 +10,8 @@ export interface ChosenShot {
 
 export function chooseShot(world: World): ChosenShot | null {
   const me = world.current;
+  const samples = config.aiAngleSamples;
+  const speed = config.maxShotSpeed;
   let best: { score: number; coinId: CoinId; vel: Vec2 } | null = null;
 
   for (const my of world.coins) {
@@ -24,14 +26,14 @@ export function chooseShot(world: World): ChosenShot | null {
 
       const baseAngle = Math.atan2(dy, dx);
       const tangentSpread = Math.atan(enemy.radius / dist);
-      const half = (AI_ANGLE_SAMPLES - 1) / 2;
+      const half = (samples - 1) / 2;
 
-      for (let k = 0; k < AI_ANGLE_SAMPLES; k++) {
+      for (let k = 0; k < samples; k++) {
         const t = half === 0 ? 0 : (k - half) / half;
         const angle = baseAngle + tangentSpread * t;
         const vel: Vec2 = {
-          x: Math.cos(angle) * MAX_SHOT_SPEED,
-          y: Math.sin(angle) * MAX_SHOT_SPEED,
+          x: Math.cos(angle) * speed,
+          y: Math.sin(angle) * speed,
         };
         const score = simulate(world, my.id, vel);
         if (best === null || score > best.score) {

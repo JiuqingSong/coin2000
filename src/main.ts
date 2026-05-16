@@ -1,12 +1,14 @@
 import { Bell } from './audio/bell';
 import { Engine } from './game/engine';
 import { Owner } from './game/types';
+import { config, loadConfig, subscribeConfig } from './game/config';
 import { AimController } from './input/aim';
 import { AIPlayer } from './players/aiPlayer';
 import { HumanPlayer } from './players/humanPlayer';
 import type { Player } from './players/player';
 import { createCanvasView } from './render/canvas';
 import { mountChrome, type P2Mode } from './ui/chrome';
+import { mountConfig } from './ui/config';
 import { mountHud } from './ui/hud';
 import { mountReactions } from './ui/reactions';
 import { mountWelcome } from './ui/welcome';
@@ -21,9 +23,13 @@ if (!board || !chromeEl || !hudEl || !overlayEl || !messageEl) {
   throw new Error('Required DOM elements missing.');
 }
 
+loadConfig();
+
 const view = createCanvasView(board);
 const aim = new AimController(board, view);
 const bell = new Bell();
+bell.setMuted(!config.soundEnabled);
+subscribeConfig(() => bell.setMuted(!config.soundEnabled));
 const reactions = mountReactions(messageEl);
 
 const unlockAudio = () => {
@@ -89,9 +95,12 @@ mountChrome(chromeEl, {
   onRestart: restart,
 });
 
+const configDialog = mountConfig(document.body);
+
 const welcome = mountWelcome(document.body, {
   onStart: () => {
     welcome.hide();
     engine.start();
   },
+  onSettings: () => configDialog.open(),
 });

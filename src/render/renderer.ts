@@ -1,7 +1,7 @@
 import type { World } from '../game/world';
 import type { AimPreview } from '../input/aim';
 import type { CanvasView } from './canvas';
-import { MAX_SHOT_SPEED } from '../game/constants';
+import { config } from '../game/config';
 import { drawCoin, drawTable } from './sprites';
 
 export function draw(view: CanvasView, world: World, aim: AimPreview | null = null): void {
@@ -19,7 +19,7 @@ export function draw(view: CanvasView, world: World, aim: AimPreview | null = nu
 }
 
 function drawAim(ctx: CanvasRenderingContext2D, aim: AimPreview): void {
-  const length = aim.power * MAX_SHOT_SPEED * 6;
+  const length = aim.power * config.maxShotSpeed * 6;
   const x2 = aim.from.x + aim.dir.x * length;
   const y2 = aim.from.y + aim.dir.y * length;
 

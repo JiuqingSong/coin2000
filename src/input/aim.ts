@@ -3,7 +3,8 @@ import type { Coin } from '../game/coin';
 import { Owner, type CoinId, type Vec2 } from '../game/types';
 import type { CanvasView } from '../render/canvas';
 import type { ShotCallback } from '../players/player';
-import { MAX_SHOT_SPEED, MIN_DRAG_DIST, POWER_SCALE } from '../game/constants';
+import { MIN_DRAG_DIST, POWER_SCALE } from '../game/constants';
+import { config } from '../game/config';
 
 export interface AimPreview {
   coinId: CoinId;
@@ -62,12 +63,13 @@ export class AimController {
     const dy = start.y - current.y;
     const mag = Math.hypot(dx, dy);
     if (mag < 1e-6) return null;
-    const speed = Math.min(mag * POWER_SCALE, MAX_SHOT_SPEED);
+    const maxSpeed = config.maxShotSpeed;
+    const speed = Math.min(mag * POWER_SCALE, maxSpeed);
     return {
       coinId,
       from: { x: coinPos.x, y: coinPos.y },
       dir: { x: dx / mag, y: dy / mag },
-      power: speed / MAX_SHOT_SPEED,
+      power: speed / maxSpeed,
     };
   }
 
@@ -105,7 +107,7 @@ export class AimController {
     const dy = start.y - current.y;
     const drag = Math.hypot(dx, dy);
     if (drag < MIN_DRAG_DIST) return;
-    const speed = Math.min(drag * POWER_SCALE, MAX_SHOT_SPEED);
+    const speed = Math.min(drag * POWER_SCALE, config.maxShotSpeed);
     const k = speed / drag;
     this.onShoot(coinId, { x: dx * k, y: dy * k });
   };
