@@ -29,6 +29,7 @@ export class AimController {
   private activeOwner: Owner | null = null;
   private world: World | null = null;
   private onShoot: ShotCallback | null = null;
+  private hoverCoinId: CoinId | null = null;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -54,6 +55,11 @@ export class AimController {
     this.world = null;
     this.onShoot = null;
     this.state = { kind: 'idle' };
+    this.hoverCoinId = null;
+  }
+
+  get hover(): CoinId | null {
+    return this.hoverCoinId;
   }
 
   get preview(): AimPreview | null {
@@ -92,8 +98,18 @@ export class AimController {
   };
 
   private handleMove = (e: PointerEvent) => {
-    if (this.state.kind !== 'dragging' || e.pointerId !== this.state.pointerId) return;
-    this.state.current = this.toScreen(e);
+    if (this.state.kind === 'dragging' && e.pointerId === this.state.pointerId) {
+      this.state.current = this.toScreen(e);
+      return;
+    }
+    if (this.activeOwner === null || this.world === null) {
+      this.hoverCoinId = null;
+      return;
+    }
+    const screen = this.toScreen(e);
+    const table = this.view.screenToTable(screen, this.world.table);
+    const coin = this.hitTest(table);
+    this.hoverCoinId = coin ? coin.id : null;
   };
 
   private handleUp = (e: PointerEvent) => {
@@ -113,6 +129,7 @@ export class AimController {
   };
 
   private handleAbort = (e: PointerEvent) => {
+    this.hoverCoinId = null;
     if (this.state.kind !== 'dragging' || e.pointerId !== this.state.pointerId) return;
     this.releaseCapture(e.pointerId);
     this.state = { kind: 'idle' };

@@ -121,7 +121,12 @@ function drawBounceEdgeAccent(
   ctx.stroke();
 }
 
-export function drawPiece(ctx: CanvasRenderingContext2D, coin: Coin, active = false): void {
+export function drawPiece(
+  ctx: CanvasRenderingContext2D,
+  coin: Coin,
+  active = false,
+  hovered = false,
+): void {
   if (coin.exploding) {
     drawExplosion(ctx, coin);
     return;
@@ -140,7 +145,7 @@ export function drawPiece(ctx: CanvasRenderingContext2D, coin: Coin, active = fa
       return;
     case CoinKind.Coin:
     default:
-      drawCoin(ctx, coin, active);
+      drawCoin(ctx, coin, active, hovered);
       return;
   }
 }
@@ -188,11 +193,11 @@ function mixHex(a: string, b: string, t: number): string {
   return '#' + ((r << 16) | (g << 8) | bl).toString(16).padStart(6, '0');
 }
 
-function drawCoin(ctx: CanvasRenderingContext2D, coin: Coin, active: boolean): void {
+function drawCoin(ctx: CanvasRenderingContext2D, coin: Coin, active: boolean, hovered: boolean): void {
   const { x, y } = coin.pos;
   const r = coin.radius;
   const ownerColor = coin.owner === Owner.P1 ? config.p1Color : config.p2Color;
-  const base = active ? lighten(ownerColor, 0.18) : ownerColor;
+  const base = active || hovered ? lighten(ownerColor, 0.18) : ownerColor;
 
   shadow(ctx, x, y, r);
 

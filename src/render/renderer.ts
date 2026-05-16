@@ -1,10 +1,16 @@
 import type { World } from '../game/world';
 import type { AimPreview } from '../input/aim';
+import type { CoinId } from '../game/types';
 import type { CanvasView } from './canvas';
 import { config } from '../game/config';
 import { drawPiece, drawTable } from './sprites';
 
-export function draw(view: CanvasView, world: World, aim: AimPreview | null = null): void {
+export function draw(
+  view: CanvasView,
+  world: World,
+  aim: AimPreview | null = null,
+  hoverId: CoinId | null = null,
+): void {
   view.resetTransform();
   view.ctx.fillStyle = '#0e1115';
   view.ctx.fillRect(0, 0, view.cssWidth, view.cssHeight);
@@ -13,7 +19,9 @@ export function draw(view: CanvasView, world: World, aim: AimPreview | null = nu
   drawTable(view.ctx, world.table, world.walls);
   const activeId = aim?.coinId ?? null;
   for (const coin of world.coins) {
-    drawPiece(view.ctx, coin, coin.id === activeId);
+    const isActive = coin.id === activeId;
+    const isHovered = !isActive && coin.id === hoverId;
+    drawPiece(view.ctx, coin, isActive, isHovered);
   }
   if (aim) drawAim(view.ctx, aim);
 }

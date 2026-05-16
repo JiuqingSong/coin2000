@@ -101,7 +101,8 @@ export class Engine {
       this.acc = 0;
     }
     this.opts.onFrame?.(this.world);
-    draw(this.opts.view, this.world, this.opts.aim.preview);
+    const hoverId = this.world.phase === Phase.Aiming ? this.opts.aim.hover : null;
+    draw(this.opts.view, this.world, this.opts.aim.preview, hoverId);
     requestAnimationFrame(this.tick);
   };
 
@@ -147,6 +148,7 @@ export class Engine {
       this.world.current = this.world.current === Owner.P1 ? Owner.P2 : Owner.P1;
     }
     this.world.phase = Phase.Aiming;
+    this.opts.aim.stop();
     this.players[this.world.current].startTurn(this.world, this.onShoot);
     this.opts.onTurnStart?.(this.world.current);
   }
