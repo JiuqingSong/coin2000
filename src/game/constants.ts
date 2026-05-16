@@ -13,7 +13,8 @@ export const SIM_HZ = 60;
 export const SIM_DT_MS = 1000 / SIM_HZ;
 export const SETTLED_EPS = 0.05;
 
-export const POWER_SCALE = 0.05;
+export const POWER_SCALE = 0.07;
+export const MIN_DRAG_DIST = 15;
 
 export const AI_THINK_MS = 400;
 export const AI_ANGLE_SAMPLES = 5;

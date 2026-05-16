@@ -422,14 +422,20 @@ Two intentional differences from the Pascal:
 - `coins[41..50]` — bombs (out of MVP scope)
 
 **Key procedures:**
-- `TCoin.go` — `COINUSE.PAS:800` — per-frame movement + collision + friction
-- `hit(c1, c2)` — `COINUSE.PAS:959` — elastic collision in rotated frame, 0.95 restitution
-- `getsita(...)` — `COINUSE.PAS:946` — angle from (x1,y1) to (x2,y2)
+- `TCoin.go` — `COINUSE.PAS:800` — per-frame movement + collision + friction. Reverts `realx/realy` to the pre-move position on collision or side-wall hit before applying `hit()` / reflection. The port's batched move-then-resolve (§5.7) is an intentional simplification.
+- `TCoin.hitother` — `COINUSE.PAS:848` — overlap test uses `(r1 + r2 + 2)²` — **2-pixel slack** on the radius sum. Port's `overlaps()` should add the same `+2` for matching feel.
+- `hit(c1, c2)` — `COINUSE.PAS:959` — elastic collision in rotated frame. The `*0.95` restitution is applied **only to the along-axis components** (`vx1`, `vx2`); the cross-axis components (`vy1`, `vy2`) pass through unchanged. Energy is removed only from the normal direction of impact.
+- `getsita(...)` — `COINUSE.PAS:946` — angle from (x1,y1) to (x2,y2). Equivalent to `atan2(y2-y1, x2-x1)`.
 - `tm.GetV` — `COIN2000.PAS:656` — human input (hover-select + click-charge)
 - `tm.cgetv` — `COIN2000.PAS:916` — computer AI; angle-spread + optional random fallback
 - `tm.run` — `COIN2000.PAS:123` — match loop, scoring, bonus rules
 
-**Physics constants:** `miu = 0.015`, `g = 9.8`, restitution `0.95` (hardcoded in `hit()`).
+**Physics constants:** `miu = 0.015`, `g = 9.8`, restitution `0.95` (hardcoded in `hit()`), collision-overlap slack `+2 px` (hardcoded in `hitother`).
+
+**Tunable defaults & ranges** (from `COINUSE.PAS` config init/validation):
+- Coin radius `r1`: default `11`, range `[11, 15]`
+- Coin mass `mg1`: default `5`, range `[5, 10]`
+- Max shot speed `maxv`: default `14`, range `[11, 20]`
 
 ---
 
