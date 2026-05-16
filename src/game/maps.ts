@@ -9,10 +9,14 @@ import {
   STONE_MASS,
   STONE_RADIUS,
   TABLE,
+  TREE_MASS,
+  TREE_RADIUS,
 } from './constants';
 
 const EDGE_INSET = 50;
 const FORTIFIED_STONE_OFFSET = 38; // distance from each player's coin column toward center
+const TREE_COL_OFFSET = 80; // distance from each player's coin column toward center
+const TREE_ROW_OFFSET = 70; // distance from each player's coin row toward center
 
 export type MapId = 'classic' | 'allSides' | 'fortified' | 'crossed';
 
@@ -160,6 +164,13 @@ function buildLeftRightColumns(
     placeNeutralColumn(coins, TABLE.width / 2, 0, bombCount);
   }
 
+  placeTreeColumns(
+    coins,
+    leftX + TREE_COL_OFFSET,
+    rightX - TREE_COL_OFFSET,
+    cfg.treeCount,
+  );
+
   return {
     table: { width: TABLE.width, height: TABLE.height },
     walls,
@@ -189,6 +200,13 @@ function buildTopBottomRows(cfg: GameConfig, walls: Walls): MapData {
   }
 
   placeNeutralRow(coins, TABLE.height / 2, stoneCount, bombCount);
+
+  placeTreeRows(
+    coins,
+    topY + TREE_ROW_OFFSET,
+    bottomY - TREE_ROW_OFFSET,
+    cfg.treeCount,
+  );
 
   return {
     table: { width: TABLE.width, height: TABLE.height },
@@ -276,6 +294,52 @@ function placeStoneColumn(coins: MapCoinData[], x: number, count: number): void 
   }
 }
 
+// Split trees evenly between two vertical columns, one inboard of each player's
+// coin column. Odd count: extra tree goes to P1's side (matches stones).
+function placeTreeColumns(
+  coins: MapCoinData[],
+  leftX: number,
+  rightX: number,
+  treeCount: number,
+): void {
+  if (treeCount === 0) return;
+  const leftCount = Math.ceil(treeCount / 2);
+  const rightCount = treeCount - leftCount;
+  placeTreeColumn(coins, leftX, leftCount);
+  placeTreeColumn(coins, rightX, rightCount);
+}
+
+function placeTreeColumn(coins: MapCoinData[], x: number, count: number): void {
+  if (count === 0) return;
+  const spacing = TABLE.height / (count + 1);
+  for (let i = 0; i < count; i++) {
+    coins.push(makeTree(x, spacing * (i + 1)));
+  }
+}
+
+// Crossed-map variant: split trees between top and bottom rows. Odd count:
+// extra tree goes to P1's (bottom) side.
+function placeTreeRows(
+  coins: MapCoinData[],
+  topY: number,
+  bottomY: number,
+  treeCount: number,
+): void {
+  if (treeCount === 0) return;
+  const bottomCount = Math.ceil(treeCount / 2);
+  const topCount = treeCount - bottomCount;
+  placeTreeRow(coins, bottomY, bottomCount);
+  placeTreeRow(coins, topY, topCount);
+}
+
+function placeTreeRow(coins: MapCoinData[], y: number, count: number): void {
+  if (count === 0) return;
+  const spacing = TABLE.width / (count + 1);
+  for (let i = 0; i < count; i++) {
+    coins.push(makeTree(spacing * (i + 1), y));
+  }
+}
+
 function makeCoin(
   owner: Owner.P1 | Owner.P2,
   x: number,
@@ -305,5 +369,16 @@ function makeBomb(x: number, y: number): MapCoinData {
     y,
     radius: BOMB_RADIUS,
     mass: BOMB_MASS,
+  };
+}
+
+function makeTree(x: number, y: number): MapCoinData {
+  return {
+    kind: CoinKind.Tree,
+    owner: Owner.Neutral,
+    x,
+    y,
+    radius: TREE_RADIUS,
+    mass: TREE_MASS,
   };
 }

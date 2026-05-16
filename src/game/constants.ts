@@ -20,6 +20,8 @@ export const STONE_RADIUS = 15;
 export const STONE_MASS = 8;
 export const BOMB_RADIUS = 12;
 export const BOMB_MASS = 1;
+export const TREE_RADIUS = 14;
+export const TREE_MASS = 1e6;
 export const EXPLODE_TICKS = 14;
 export const DROP_TICKS = 28;
 

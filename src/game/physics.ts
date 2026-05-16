@@ -23,11 +23,11 @@ export function step(world: World, events?: PhysicsEvents): void {
   const coins = world.coins;
   const prev: Array<{ x: number; y: number }> = new Array(coins.length);
 
-  // 1. Save pre-move positions, then move (exploding bombs don't move)
+  // 1. Save pre-move positions, then move (exploding bombs and trees don't move)
   for (let i = 0; i < coins.length; i++) {
     const c = coins[i]!;
     prev[i] = { x: c.pos.x, y: c.pos.y };
-    if (!c.alive || c.exploding) continue;
+    if (!c.alive || c.exploding || c.kind === CoinKind.Tree) continue;
     c.pos.x += c.vel.x;
     c.pos.y += c.vel.y;
   }
@@ -57,6 +57,21 @@ export function step(world: World, events?: PhysicsEvents): void {
       if (!a.alive || !b.alive) continue;
       if (a.exploding || b.exploding) continue;
       if (!overlaps(a, b)) continue;
+
+      const aTree = a.kind === CoinKind.Tree;
+      const bTree = b.kind === CoinKind.Tree;
+
+      // Trees are static obstacles that bounce coins/stones/bombs — they
+      // never move, never explode, never die. Must be checked before the
+      // bomb branch so bombs bounce off trees instead of detonating.
+      if (aTree || bTree) {
+        if (aTree && bTree) continue; // two trees overlapping — placement bug
+        const tree = aTree ? a : b;
+        const mover = aTree ? b : a;
+        resolveStaticCircle(tree, mover);
+        events?.onCollide?.(a, b);
+        continue;
+      }
 
       const aBomb = a.kind === CoinKind.Bomb;
       const bBomb = b.kind === CoinKind.Bomb;
@@ -89,7 +104,7 @@ export function step(world: World, events?: PhysicsEvents): void {
   const walls = world.walls;
   for (let i = 0; i < coins.length; i++) {
     const c = coins[i]!;
-    if (!c.alive || c.exploding) continue;
+    if (!c.alive || c.exploding || c.kind === CoinKind.Tree) continue;
     const r = c.radius;
     const outTop = c.pos.y < r;
     const outBottom = c.pos.y > world.table.height - r;
@@ -128,7 +143,7 @@ export function step(world: World, events?: PhysicsEvents): void {
 
   // 5. Friction
   for (const c of coins) {
-    if (!c.alive || c.exploding) continue;
+    if (!c.alive || c.exploding || c.kind === CoinKind.Tree) continue;
     const s = Math.hypot(c.vel.x, c.vel.y);
     if (s < SETTLED_EPS) {
       c.vel.x = 0;
@@ -152,6 +167,31 @@ export function overlaps(a: Coin, b: Coin): boolean {
   const dy = a.pos.y - b.pos.y;
   const r = a.radius + b.radius + COLLISION_SLACK;
   return dx * dx + dy * dy <= r * r;
+}
+
+// Reflect `mover` off a static circle (`tree`). Pushes the mover out along
+// the contact normal so it no longer overlaps, then bounces the velocity
+// component along that normal with RESTITUTION. The tree itself is unchanged.
+export function resolveStaticCircle(tree: Coin, mover: Coin): void {
+  let dx = mover.pos.x - tree.pos.x;
+  let dy = mover.pos.y - tree.pos.y;
+  let dist = Math.hypot(dx, dy);
+  if (dist < 1e-6) {
+    // Degenerate overlap — pick an arbitrary axis to separate along.
+    dx = 1;
+    dy = 0;
+    dist = 1;
+  }
+  const nx = dx / dist;
+  const ny = dy / dist;
+  const minDist = tree.radius + mover.radius + COLLISION_SLACK;
+  mover.pos.x = tree.pos.x + nx * minDist;
+  mover.pos.y = tree.pos.y + ny * minDist;
+  const vn = mover.vel.x * nx + mover.vel.y * ny;
+  if (vn < 0) {
+    mover.vel.x = (mover.vel.x - 2 * vn * nx) * RESTITUTION;
+    mover.vel.y = (mover.vel.y - 2 * vn * ny) * RESTITUTION;
+  }
 }
 
 export function resolveCollision(a: Coin, b: Coin): void {

@@ -9,6 +9,7 @@ export interface GameConfig {
   soundEnabled: boolean;
   stoneCount: number;
   bombCount: number;
+  treeCount: number;
   explosionRadius: number;
   chainBombs: boolean;
   misfireProtection: boolean;
@@ -26,6 +27,7 @@ export const CONFIG_DEFAULTS: Readonly<GameConfig> = {
   soundEnabled: true,
   stoneCount: 5,
   bombCount: 3,
+  treeCount: 4,
   explosionRadius: 30,
   chainBombs: true,
   misfireProtection: false,
@@ -40,6 +42,7 @@ export const CONFIG_RANGES = {
   aiAngleSamples: { min: 1, max: 5 },
   stoneCount: { min: 0, max: 10 },
   bombCount: { min: 0, max: 5 },
+  treeCount: { min: 0, max: 10 },
   explosionRadius: { min: 15, max: 100 },
 } as const;
 
@@ -96,6 +99,7 @@ function sanitize(next: GameConfig): GameConfig {
     soundEnabled: !!next.soundEnabled,
     stoneCount: clampInt(next.stoneCount, CONFIG_RANGES.stoneCount.min, CONFIG_RANGES.stoneCount.max),
     bombCount: clampInt(next.bombCount, CONFIG_RANGES.bombCount.min, CONFIG_RANGES.bombCount.max),
+    treeCount: clampInt(next.treeCount, CONFIG_RANGES.treeCount.min, CONFIG_RANGES.treeCount.max),
     explosionRadius: clampInt(next.explosionRadius, CONFIG_RANGES.explosionRadius.min, CONFIG_RANGES.explosionRadius.max),
     chainBombs: !!next.chainBombs,
     misfireProtection: !!next.misfireProtection,

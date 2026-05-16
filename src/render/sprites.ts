@@ -8,6 +8,7 @@ import { EXPLODE_TICKS } from '../game/constants';
 const WALL_THICKNESS = 4;
 const STONE_COLOR = '#c84acb';
 const BOMB_OUTER = '#222222';
+const TREE_COLOR = '#2a6d3a';
 
 let wallPattern: CanvasPattern | null = null;
 let feltPattern: CanvasPattern | null = null;
@@ -206,6 +207,9 @@ export function drawPiece(
     case CoinKind.Bomb:
       drawBomb(ctx, coin);
       return;
+    case CoinKind.Tree:
+      drawTree(ctx, coin);
+      return;
     case CoinKind.Coin:
     default:
       drawCoin(ctx, coin, active, hovered);
@@ -237,6 +241,8 @@ function pieceBaseColor(coin: Coin): string {
       return STONE_COLOR;
     case CoinKind.Bomb:
       return BOMB_OUTER;
+    case CoinKind.Tree:
+      return TREE_COLOR;
     case CoinKind.Coin:
     default:
       return coin.owner === Owner.P1 ? config.p1Color : config.p2Color;
@@ -483,6 +489,82 @@ function drawBomb(ctx: CanvasRenderingContext2D, coin: Coin): void {
   // Outline.
   ctx.strokeStyle = 'rgba(0,0,0,0.9)';
   ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.arc(x, y, r - 0.3, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawTree(ctx: CanvasRenderingContext2D, coin: Coin): void {
+  const { x, y } = coin.pos;
+  const r = coin.radius;
+
+  shadow(ctx, x, y, r);
+
+  // Canopy base — dark forest green.
+  ctx.fillStyle = TREE_COLOR;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Foliage texture, clipped to canopy. Seeded by id so it's stable per tree.
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.clip();
+
+  const rand = seededRandom(coin.id * 6151 + 29);
+
+  // Lighter leaf clusters — sunlit top of canopy.
+  for (let i = 0; i < 10; i++) {
+    const px = x + (rand() - 0.5) * r * 1.6;
+    const py = y + (rand() - 0.5) * r * 1.6;
+    const pr = r * (0.25 + rand() * 0.35);
+    ctx.fillStyle = `rgba(140,200,110,${(0.18 + rand() * 0.22).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.arc(px, py, pr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Darker leaf pockets — shaded gaps between clusters.
+  for (let i = 0; i < 8; i++) {
+    const px = x + (rand() - 0.5) * r * 1.7;
+    const py = y + (rand() - 0.5) * r * 1.7;
+    const pr = r * (0.18 + rand() * 0.28);
+    ctx.fillStyle = `rgba(15,55,25,${(0.22 + rand() * 0.18).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.arc(px, py, pr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Tiny highlight speckles.
+  for (let i = 0; i < 18; i++) {
+    const px = x + (rand() - 0.5) * r * 1.9;
+    const py = y + (rand() - 0.5) * r * 1.9;
+    ctx.fillStyle = `rgba(220,255,200,${(0.18 + rand() * 0.22).toFixed(3)})`;
+    ctx.fillRect(px, py, 1, 1);
+  }
+
+  ctx.restore();
+
+  // 3D shading: bright top-left, dark bottom-right.
+  const shade = ctx.createRadialGradient(x - r * 0.45, y - r * 0.5, r * 0.1, x, y, r);
+  shade.addColorStop(0, 'rgba(255,255,255,0.22)');
+  shade.addColorStop(0.55, 'rgba(255,255,255,0)');
+  shade.addColorStop(1, 'rgba(0,0,0,0.45)');
+  ctx.fillStyle = shade;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Trunk hint — small brown dot at the center.
+  ctx.fillStyle = '#5a3a1f';
+  ctx.beginPath();
+  ctx.arc(x, y, Math.max(1.5, r * 0.14), 0, Math.PI * 2);
+  ctx.fill();
+
+  // Dark outline.
+  ctx.strokeStyle = 'rgba(0,0,0,0.75)';
+  ctx.lineWidth = 0.9;
   ctx.beginPath();
   ctx.arc(x, y, r - 0.3, 0, Math.PI * 2);
   ctx.stroke();

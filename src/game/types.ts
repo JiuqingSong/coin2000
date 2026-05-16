@@ -10,6 +10,7 @@ export const enum CoinKind {
   Coin = 'coin',
   Stone = 'stone',
   Bomb = 'bomb',
+  Tree = 'tree',
 }
 
 export type CoinId = number;

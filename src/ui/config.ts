@@ -73,6 +73,8 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     CONFIG_RANGES.stoneCount.min, CONFIG_RANGES.stoneCount.max, config.stoneCount);
   const bombCountRow = sliderRow(piecesSec, 'config.label.bombCount',
     CONFIG_RANGES.bombCount.min, CONFIG_RANGES.bombCount.max, config.bombCount);
+  const treeCountRow = sliderRow(piecesSec, 'config.label.treeCount',
+    CONFIG_RANGES.treeCount.min, CONFIG_RANGES.treeCount.max, config.treeCount);
   const explosionRow = sliderRow(piecesSec, 'config.label.explosionRadius',
     CONFIG_RANGES.explosionRadius.min, CONFIG_RANGES.explosionRadius.max, config.explosionRadius);
   const chainRow = checkboxRow(piecesSec, 'config.label.chainBombs', config.chainBombs);
@@ -122,6 +124,7 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     soundRow.set(config.soundEnabled);
     stoneCountRow.set(config.stoneCount);
     bombCountRow.set(config.bombCount);
+    treeCountRow.set(config.treeCount);
     explosionRow.set(config.explosionRadius);
     chainRow.set(config.chainBombs);
     misfireRow.set(config.misfireProtection);
@@ -139,6 +142,7 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     soundEnabled: soundRow.get(),
     stoneCount: stoneCountRow.get(),
     bombCount: bombCountRow.get(),
+    treeCount: treeCountRow.get(),
     explosionRadius: explosionRow.get(),
     chainBombs: chainRow.get(),
     misfireProtection: misfireRow.get(),
@@ -168,6 +172,7 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     soundRow.set(CONFIG_DEFAULTS.soundEnabled);
     stoneCountRow.set(CONFIG_DEFAULTS.stoneCount);
     bombCountRow.set(CONFIG_DEFAULTS.bombCount);
+    treeCountRow.set(CONFIG_DEFAULTS.treeCount);
     explosionRow.set(CONFIG_DEFAULTS.explosionRadius);
     chainRow.set(CONFIG_DEFAULTS.chainBombs);
     misfireRow.set(CONFIG_DEFAULTS.misfireProtection);
