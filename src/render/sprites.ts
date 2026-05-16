@@ -126,6 +126,10 @@ export function drawPiece(ctx: CanvasRenderingContext2D, coin: Coin, active = fa
     drawExplosion(ctx, coin);
     return;
   }
+  if (coin.dropping) {
+    drawDropping(ctx, coin);
+    return;
+  }
   if (!coin.alive) return;
   switch (coin.kind) {
     case CoinKind.Stone:
@@ -139,6 +143,49 @@ export function drawPiece(ctx: CanvasRenderingContext2D, coin: Coin, active = fa
       drawCoin(ctx, coin, active);
       return;
   }
+}
+
+function drawDropping(ctx: CanvasRenderingContext2D, coin: Coin): void {
+  if (!coin.dropping) return;
+  const { ticksLeft, totalTicks, startRadius } = coin.dropping;
+  const p = 1 - Math.max(0, ticksLeft) / totalTicks; // 0 → 1
+  const radius = startRadius * (1 - p);
+  if (radius < 0.5) return;
+
+  const { x, y } = coin.pos;
+  const base = pieceBaseColor(coin);
+  // Darken toward black as the coin drops.
+  const darkened = mixHex(base, '#000000', Math.min(1, p * 1.2));
+
+  ctx.fillStyle = darkened;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function pieceBaseColor(coin: Coin): string {
+  switch (coin.kind) {
+    case CoinKind.Stone:
+      return STONE_COLOR;
+    case CoinKind.Bomb:
+      return BOMB_OUTER;
+    case CoinKind.Coin:
+    default:
+      return coin.owner === Owner.P1 ? config.p1Color : config.p2Color;
+  }
+}
+
+function mixHex(a: string, b: string, t: number): string {
+  const ma = /^#([0-9a-f]{6})$/i.exec(a);
+  const mb = /^#([0-9a-f]{6})$/i.exec(b);
+  if (!ma || !mb) return a;
+  const na = parseInt(ma[1]!, 16);
+  const nb = parseInt(mb[1]!, 16);
+  const blend = (sa: number, sb: number) => Math.round(sa + (sb - sa) * t);
+  const r = blend((na >> 16) & 0xff, (nb >> 16) & 0xff);
+  const g = blend((na >> 8) & 0xff, (nb >> 8) & 0xff);
+  const bl = blend(na & 0xff, nb & 0xff);
+  return '#' + ((r << 16) | (g << 8) | bl).toString(16).padStart(6, '0');
 }
 
 function drawCoin(ctx: CanvasRenderingContext2D, coin: Coin, active: boolean): void {

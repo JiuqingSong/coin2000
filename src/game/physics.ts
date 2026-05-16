@@ -2,6 +2,7 @@ import type { Coin } from './coin';
 import type { World } from './world';
 import { CoinKind, Owner } from './types';
 import {
+  DROP_TICKS,
   EXPLODE_TICKS,
   FRICTION_MU,
   G,
@@ -31,13 +32,20 @@ export function step(world: World, events?: PhysicsEvents): void {
     c.pos.y += c.vel.y;
   }
 
-  // 2. Advance ongoing explosion animations
+  // 2. Advance ongoing explosion / drop animations
   for (const c of coins) {
-    if (!c.exploding) continue;
-    c.exploding.ticksLeft--;
-    if (c.exploding.ticksLeft <= 0) {
-      c.alive = false;
-      c.exploding = undefined;
+    if (c.exploding) {
+      c.exploding.ticksLeft--;
+      if (c.exploding.ticksLeft <= 0) {
+        c.alive = false;
+        c.exploding = undefined;
+      }
+    }
+    if (c.dropping) {
+      c.dropping.ticksLeft--;
+      if (c.dropping.ticksLeft <= 0) {
+        c.dropping = undefined;
+      }
     }
   }
 
@@ -95,6 +103,13 @@ export function step(world: World, events?: PhysicsEvents): void {
       (outRight && walls.right === 'kill')
     ) {
       c.alive = false;
+      c.vel.x = 0;
+      c.vel.y = 0;
+      c.dropping = {
+        ticksLeft: DROP_TICKS,
+        totalTicks: DROP_TICKS,
+        startRadius: c.radius,
+      };
       decrementAlive(world, c);
       events?.onDie?.(c);
       continue;
@@ -164,6 +179,7 @@ export function resolveCollision(a: Coin, b: Coin): void {
 export function allSettled(world: World): boolean {
   for (const c of world.coins) {
     if (c.exploding) return false;
+    if (c.dropping) return false;
     if (!c.alive) continue;
     if (c.vel.x !== 0 || c.vel.y !== 0) return false;
   }

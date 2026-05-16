@@ -6,6 +6,12 @@ export interface ExplosionState {
   peakRadius: number;
 }
 
+export interface DropState {
+  ticksLeft: number;
+  totalTicks: number;
+  startRadius: number;
+}
+
 export interface Coin {
   id: CoinId;
   kind: CoinKind;
@@ -16,4 +22,5 @@ export interface Coin {
   mass: number;
   alive: boolean;
   exploding?: ExplosionState;
+  dropping?: DropState;
 }
