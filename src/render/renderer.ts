@@ -10,7 +10,7 @@ export function draw(view: CanvasView, world: World, aim: AimPreview | null = nu
   view.ctx.fillRect(0, 0, view.cssWidth, view.cssHeight);
 
   view.applyTableTransform(world.table);
-  drawTable(view.ctx, world.table);
+  drawTable(view.ctx, world.table, world.walls);
   const activeId = aim?.coinId ?? null;
   for (const coin of world.coins) {
     drawPiece(view.ctx, coin, coin.id === activeId);

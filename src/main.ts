@@ -2,6 +2,7 @@ import { Bell } from './audio/bell';
 import { Engine } from './game/engine';
 import { Owner } from './game/types';
 import { config, loadConfig, subscribeConfig } from './game/config';
+import { applyDocumentLocale } from './i18n';
 import { AimController } from './input/aim';
 import { AIPlayer } from './players/aiPlayer';
 import { HumanPlayer } from './players/humanPlayer';
@@ -24,6 +25,7 @@ if (!board || !chromeEl || !hudEl || !overlayEl || !messageEl) {
 }
 
 loadConfig();
+applyDocumentLocale();
 
 const view = createCanvasView(board);
 const aim = new AimController(board, view);
@@ -92,6 +94,7 @@ mountChrome(chromeEl, {
     hud.setP2Mode(mode);
     engine.setPlayer(Owner.P2, buildPlayer(Owner.P2));
   },
+  onMapChange: () => restart(),
   onRestart: restart,
 });
 

@@ -1,5 +1,6 @@
 import type { Coin } from '../game/coin';
 import type { Table } from '../game/table';
+import type { Walls } from '../game/world';
 import { CoinKind, Owner } from '../game/types';
 import { config } from '../game/config';
 import { EXPLODE_TICKS } from '../game/constants';
@@ -31,42 +32,92 @@ function getWallPattern(ctx: CanvasRenderingContext2D): CanvasPattern | null {
   return wallPattern;
 }
 
-export function drawTable(ctx: CanvasRenderingContext2D, table: Table): void {
+const DEFAULT_WALLS: Walls = {
+  top: 'kill',
+  bottom: 'kill',
+  left: 'bounce',
+  right: 'bounce',
+};
+
+export function drawTable(
+  ctx: CanvasRenderingContext2D,
+  table: Table,
+  walls: Walls = DEFAULT_WALLS,
+): void {
   ctx.fillStyle = '#173d2c';
   ctx.fillRect(0, 0, table.width, table.height);
 
   const pattern = getWallPattern(ctx);
-  if (pattern) {
-    ctx.fillStyle = pattern;
+  const bounceFill: string | CanvasPattern = pattern ?? '#3a4252';
+
+  // Bounce walls: thick stone-pattern bar, then thin highlight + shadow lines.
+  if (walls.left === 'bounce') {
+    ctx.fillStyle = bounceFill;
     ctx.fillRect(0, 0, WALL_THICKNESS, table.height);
+    drawBounceEdgeAccent(ctx, WALL_THICKNESS + 0.5, 0, WALL_THICKNESS + 0.5, table.height, 0.5, 0, 0.5, table.height);
+  }
+  if (walls.right === 'bounce') {
+    ctx.fillStyle = bounceFill;
     ctx.fillRect(table.width - WALL_THICKNESS, 0, WALL_THICKNESS, table.height);
-  } else {
-    ctx.fillStyle = '#3a4252';
-    ctx.fillRect(0, 0, WALL_THICKNESS, table.height);
-    ctx.fillRect(table.width - WALL_THICKNESS, 0, WALL_THICKNESS, table.height);
+    drawBounceEdgeAccent(
+      ctx,
+      table.width - WALL_THICKNESS - 0.5, 0,
+      table.width - WALL_THICKNESS - 0.5, table.height,
+      table.width - 0.5, 0,
+      table.width - 0.5, table.height,
+    );
+  }
+  if (walls.top === 'bounce') {
+    ctx.fillStyle = bounceFill;
+    ctx.fillRect(0, 0, table.width, WALL_THICKNESS);
+    drawBounceEdgeAccent(ctx, 0, WALL_THICKNESS + 0.5, table.width, WALL_THICKNESS + 0.5, 0, 0.5, table.width, 0.5);
+  }
+  if (walls.bottom === 'bounce') {
+    ctx.fillStyle = bounceFill;
+    ctx.fillRect(0, table.height - WALL_THICKNESS, table.width, WALL_THICKNESS);
+    drawBounceEdgeAccent(
+      ctx,
+      0, table.height - WALL_THICKNESS - 0.5,
+      table.width, table.height - WALL_THICKNESS - 0.5,
+      0, table.height - 0.5,
+      table.width, table.height - 0.5,
+    );
   }
 
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-  ctx.beginPath();
-  ctx.moveTo(WALL_THICKNESS + 0.5, 0);
-  ctx.lineTo(WALL_THICKNESS + 0.5, table.height);
-  ctx.moveTo(table.width - WALL_THICKNESS - 0.5, 0);
-  ctx.lineTo(table.width - WALL_THICKNESS - 0.5, table.height);
-  ctx.stroke();
-  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-  ctx.beginPath();
-  ctx.moveTo(0.5, 0);
-  ctx.lineTo(0.5, table.height);
-  ctx.moveTo(table.width - 0.5, 0);
-  ctx.lineTo(table.width - 0.5, table.height);
-  ctx.stroke();
-
+  // Kill walls: red danger line just inside the edge.
   ctx.strokeStyle = '#8a3a2e';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(0, 1); ctx.lineTo(table.width, 1);
-  ctx.moveTo(0, table.height - 1); ctx.lineTo(table.width, table.height - 1);
+  if (walls.top === 'kill') {
+    ctx.moveTo(0, 1); ctx.lineTo(table.width, 1);
+  }
+  if (walls.bottom === 'kill') {
+    ctx.moveTo(0, table.height - 1); ctx.lineTo(table.width, table.height - 1);
+  }
+  if (walls.left === 'kill') {
+    ctx.moveTo(1, 0); ctx.lineTo(1, table.height);
+  }
+  if (walls.right === 'kill') {
+    ctx.moveTo(table.width - 1, 0); ctx.lineTo(table.width - 1, table.height);
+  }
+  ctx.stroke();
+}
+
+function drawBounceEdgeAccent(
+  ctx: CanvasRenderingContext2D,
+  hiX1: number, hiY1: number, hiX2: number, hiY2: number,
+  shX1: number, shY1: number, shX2: number, shY2: number,
+): void {
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath();
+  ctx.moveTo(hiX1, hiY1);
+  ctx.lineTo(hiX2, hiY2);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  ctx.beginPath();
+  ctx.moveTo(shX1, shY1);
+  ctx.lineTo(shX2, shY2);
   ctx.stroke();
 }
 

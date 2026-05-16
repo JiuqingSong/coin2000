@@ -1,3 +1,12 @@
+import { subscribeLocale, t, toggleLocale } from '../i18n';
+import {
+  MAPS,
+  getSelectedMapId,
+  setSelectedMapId,
+  subscribeMap,
+  type MapId,
+} from '../game/maps';
+
 export interface WelcomeOptions {
   onStart(): void;
   onSettings(): void;
@@ -6,6 +15,14 @@ export interface WelcomeOptions {
 export interface WelcomeHandle {
   hide(): void;
 }
+
+type ModalKind = 'about' | 'replay' | 'quit';
+
+const MODAL_CONFIG: Record<ModalKind, { titleKey: 'welcome.about.title' | 'welcome.replay.title' | 'welcome.quit.title'; bodyKey: 'welcome.about.body' | 'welcome.replay.body' | 'welcome.quit.body'; closable: boolean }> = {
+  about: { titleKey: 'welcome.about.title', bodyKey: 'welcome.about.body', closable: true },
+  replay: { titleKey: 'welcome.replay.title', bodyKey: 'welcome.replay.body', closable: true },
+  quit: { titleKey: 'welcome.quit.title', bodyKey: 'welcome.quit.body', closable: false },
+};
 
 export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): WelcomeHandle {
   const overlay = document.createElement('div');
@@ -16,17 +33,18 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
 
   const titlebar = document.createElement('div');
   titlebar.className = 'welcome-titlebar';
-  titlebar.innerHTML = 'Song Studio<sup>®</sup> 系列产品';
 
   const body = document.createElement('div');
   body.className = 'welcome-body';
 
   const sidebar = document.createElement('aside');
   sidebar.className = 'welcome-sidebar';
-  const btnQuit = makeToolButton('结束');
-  const btnSettings = makeToolButton('设置');
-  const btnAbout = makeToolButton('关于');
-  sidebar.append(btnQuit, btnSettings, btnAbout);
+  const btnQuit = makeToolButton();
+  const btnSettings = makeToolButton();
+  const btnAbout = makeToolButton();
+  const btnLang = makeToolButton();
+  btnLang.classList.add('lang');
+  sidebar.append(btnQuit, btnSettings, btnAbout, btnLang);
 
   const main = document.createElement('div');
   main.className = 'welcome-main';
@@ -41,91 +59,164 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
 
   const signature = document.createElement('div');
   signature.className = 'welcome-signature';
-  signature.textContent = '作者: Songthin';
+
+  const mapPicker = buildMapPicker();
 
   const actions = document.createElement('div');
   actions.className = 'welcome-actions';
-  const btnStart = makeActionButton('开始', true);
-  const btnReplay = makeActionButton('放录相', false);
+  const btnStart = makeActionButton(true);
+  const btnReplay = makeActionButton(false);
   actions.append(btnStart, btnReplay);
 
-  main.append(logo, signature, actions);
+  main.append(logo, signature, mapPicker.root, actions);
   body.append(sidebar, main);
 
   const footer = document.createElement('div');
   footer.className = 'welcome-footer';
-  footer.textContent = '本游戏完全免费，欢迎拷贝。 2000年10月 V2.61';
 
   dialog.append(titlebar, body, footer);
   overlay.append(dialog);
   parent.append(overlay);
 
   let modal: HTMLElement | null = null;
+  let modalTitleEl: HTMLElement | null = null;
+  let modalBodyEl: HTMLElement | null = null;
+  let modalBackBtn: HTMLButtonElement | null = null;
+  let currentModalKind: ModalKind | null = null;
 
   const closeModal = () => {
     if (modal) {
       modal.remove();
       modal = null;
+      modalTitleEl = null;
+      modalBodyEl = null;
+      modalBackBtn = null;
+      currentModalKind = null;
     }
   };
 
-  const openModal = (title: string, message: string, closable: boolean) => {
+  const openModal = (kind: ModalKind) => {
     closeModal();
+    currentModalKind = kind;
+    const cfg = MODAL_CONFIG[kind];
     modal = document.createElement('div');
     modal.className = 'welcome-modal';
     const card = document.createElement('div');
     card.className = 'welcome-modal-card';
-    const h = document.createElement('h3');
-    h.textContent = title;
-    const p = document.createElement('p');
-    p.textContent = message;
-    card.append(h, p);
-    if (closable) {
-      const back = document.createElement('button');
-      back.type = 'button';
-      back.textContent = '返回';
-      back.addEventListener('click', closeModal);
-      card.append(back);
+    modalTitleEl = document.createElement('h3');
+    modalTitleEl.textContent = t(cfg.titleKey);
+    modalBodyEl = document.createElement('p');
+    modalBodyEl.textContent = t(cfg.bodyKey);
+    card.append(modalTitleEl, modalBodyEl);
+    if (cfg.closable) {
+      modalBackBtn = document.createElement('button');
+      modalBackBtn.type = 'button';
+      modalBackBtn.textContent = t('welcome.modal.back');
+      modalBackBtn.addEventListener('click', closeModal);
+      card.append(modalBackBtn);
     }
     modal.append(card);
     dialog.append(modal);
   };
 
+  const applyLocale = () => {
+    titlebar.innerHTML = t('welcome.titlebar');
+    btnQuit.textContent = t('welcome.tool.quit');
+    btnSettings.textContent = t('welcome.tool.settings');
+    btnAbout.textContent = t('welcome.tool.about');
+    btnLang.textContent = t('welcome.tool.lang');
+    signature.textContent = t('welcome.signature');
+    btnStart.textContent = t('welcome.action.start');
+    btnReplay.textContent = t('welcome.action.replay');
+    footer.textContent = t('welcome.footer');
+    mapPicker.refresh();
+
+    if (currentModalKind) {
+      const cfg = MODAL_CONFIG[currentModalKind];
+      if (modalTitleEl) modalTitleEl.textContent = t(cfg.titleKey);
+      if (modalBodyEl) modalBodyEl.textContent = t(cfg.bodyKey);
+      if (modalBackBtn) modalBackBtn.textContent = t('welcome.modal.back');
+    }
+  };
+
+  applyLocale();
+  const unsubscribeLocale = subscribeLocale(applyLocale);
+  const unsubscribeMap = subscribeMap(() => mapPicker.refresh());
+
   btnStart.addEventListener('click', () => opts.onStart());
   btnSettings.addEventListener('click', () => opts.onSettings());
-  btnAbout.addEventListener('click', () => {
-    openModal(
-      '关于',
-      'COIN 2000  版本 2.61\n作者: Songthin\n版权所有 © 1995-2000 Song Studio\n\n浏览器移植版 · 2026',
-      true,
-    );
-  });
-  btnReplay.addEventListener('click', () => {
-    openModal('放录相', '暂未实现。', true);
-  });
-  btnQuit.addEventListener('click', () => {
-    openModal('感谢游玩', '感谢游玩 COIN 2000。\n请关闭此标签页。', false);
-  });
+  btnAbout.addEventListener('click', () => openModal('about'));
+  btnReplay.addEventListener('click', () => openModal('replay'));
+  btnQuit.addEventListener('click', () => openModal('quit'));
+  btnLang.addEventListener('click', toggleLocale);
 
   return {
     hide() {
+      unsubscribeLocale();
+      unsubscribeMap();
       overlay.remove();
     },
   };
 }
 
-function makeToolButton(text: string): HTMLButtonElement {
+interface MapPicker {
+  root: HTMLElement;
+  refresh(): void;
+}
+
+function buildMapPicker(): MapPicker {
+  const root = document.createElement('div');
+  root.className = 'welcome-maps';
+
+  const heading = document.createElement('div');
+  heading.className = 'welcome-maps-heading';
+  root.append(heading);
+
+  const grid = document.createElement('div');
+  grid.className = 'welcome-maps-grid';
+  root.append(grid);
+
+  const desc = document.createElement('div');
+  desc.className = 'welcome-maps-desc';
+  root.append(desc);
+
+  const buttons: Array<{ id: MapId; btn: HTMLButtonElement }> = [];
+  for (const m of MAPS) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'welcome-map-btn';
+    btn.dataset.mapId = m.id;
+    btn.addEventListener('click', () => setSelectedMapId(m.id));
+    grid.append(btn);
+    buttons.push({ id: m.id, btn });
+  }
+
+  const refresh = () => {
+    heading.textContent = t('welcome.map.heading');
+    const current = getSelectedMapId();
+    for (const { id, btn } of buttons) {
+      const def = MAPS.find((m) => m.id === id)!;
+      btn.textContent = t(def.nameKey);
+      btn.classList.toggle('selected', id === current);
+    }
+    const currentDef = MAPS.find((m) => m.id === current);
+    desc.textContent = currentDef ? t(currentDef.descKey) : '';
+  };
+  refresh();
+
+  return { root, refresh };
+}
+
+function makeToolButton(): HTMLButtonElement {
   const b = document.createElement('button');
   b.type = 'button';
   b.className = 'welcome-tool';
-  b.textContent = text;
   return b;
 }
 
-function makeActionButton(text: string, primary: boolean): HTMLButtonElement {
+function makeActionButton(primary: boolean): HTMLButtonElement {
   const b = document.createElement('button');
   b.type = 'button';
   b.className = 'welcome-action' + (primary ? ' primary' : '');
-  b.textContent = text;
   return b;
 }

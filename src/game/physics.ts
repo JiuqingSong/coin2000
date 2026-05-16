@@ -78,22 +78,35 @@ export function step(world: World, events?: PhysicsEvents): void {
   }
 
   // 4. Walls
+  const walls = world.walls;
   for (let i = 0; i < coins.length; i++) {
     const c = coins[i]!;
     if (!c.alive || c.exploding) continue;
     const r = c.radius;
-    const outY = c.pos.y < r || c.pos.y > world.table.height - r;
-    if (outY) {
+    const outTop = c.pos.y < r;
+    const outBottom = c.pos.y > world.table.height - r;
+    const outLeft = c.pos.x < r;
+    const outRight = c.pos.x > world.table.width - r;
+
+    if (
+      (outTop && walls.top === 'kill') ||
+      (outBottom && walls.bottom === 'kill') ||
+      (outLeft && walls.left === 'kill') ||
+      (outRight && walls.right === 'kill')
+    ) {
       c.alive = false;
       decrementAlive(world, c);
       events?.onDie?.(c);
       continue;
     }
-    const outX = c.pos.x < r || c.pos.x > world.table.width - r;
-    if (outX) {
-      const p = prev[i]!;
-      c.pos.x = p.x;
+
+    const p = prev[i]!;
+    if (outTop || outBottom) {
       c.pos.y = p.y;
+      c.vel.y = -c.vel.y;
+    }
+    if (outLeft || outRight) {
+      c.pos.x = p.x;
       c.vel.x = -c.vel.x;
     }
   }

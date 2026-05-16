@@ -5,10 +5,21 @@ import {
   config,
   type GameConfig,
 } from '../game/config';
+import { subscribeLocale, t, type StringKey } from '../i18n';
 
 export interface ConfigDialogHandle {
   open(): void;
   close(): void;
+}
+
+interface SliderRow {
+  set(v: number): void;
+  get(): number;
+}
+
+interface CheckboxRow {
+  set(v: boolean): void;
+  get(): boolean;
 }
 
 export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
@@ -19,119 +30,84 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
   const card = document.createElement('div');
   card.className = 'config-card';
 
+  // Direct-replacement labels (whole textContent = t(key)).
+  type LabelEntry = { node: Node; key: StringKey };
+  const labels: LabelEntry[] = [];
+  const trackLabel = (node: Node, key: StringKey): Node => {
+    node.textContent = t(key);
+    labels.push({ node, key });
+    return node;
+  };
+
+  // For text nodes that need wrapping (e.g. leading space for inline checkbox label).
+  const refreshers: Array<() => void> = [];
+
   const title = document.createElement('h2');
-  title.textContent = '设置';
+  trackLabel(title, 'config.title');
   card.append(title);
 
-  // -- color section --
-  const colorSec = section('颜色');
-  const p1ColorInput = colorRow(colorSec, '玩家硬币', config.p1Color);
-  const p2ColorInput = colorRow(colorSec, '电脑硬币', config.p2Color);
+  const colorSec = section('config.section.colors');
+  const p1ColorInput = colorRow(colorSec, 'config.label.p1Color', config.p1Color);
+  const p2ColorInput = colorRow(colorSec, 'config.label.p2Color', config.p2Color);
   card.append(colorSec.fieldset);
 
-  // -- coin section --
-  const coinSec = section('硬币');
-  const coinsPerSideRow = sliderRow(
-    coinSec,
-    '每方硬币数',
-    CONFIG_RANGES.coinsPerSide.min,
-    CONFIG_RANGES.coinsPerSide.max,
-    config.coinsPerSide,
-  );
-  const radiusRow = sliderRow(
-    coinSec,
-    '硬币半径',
-    CONFIG_RANGES.coinRadius.min,
-    CONFIG_RANGES.coinRadius.max,
-    config.coinRadius,
-  );
-  const massRow = sliderRow(
-    coinSec,
-    '硬币质量',
-    CONFIG_RANGES.coinMass.min,
-    CONFIG_RANGES.coinMass.max,
-    config.coinMass,
-  );
+  const coinSec = section('config.section.coins');
+  const coinsPerSideRow = sliderRow(coinSec, 'config.label.coinsPerSide',
+    CONFIG_RANGES.coinsPerSide.min, CONFIG_RANGES.coinsPerSide.max, config.coinsPerSide);
+  const radiusRow = sliderRow(coinSec, 'config.label.coinRadius',
+    CONFIG_RANGES.coinRadius.min, CONFIG_RANGES.coinRadius.max, config.coinRadius);
+  const massRow = sliderRow(coinSec, 'config.label.coinMass',
+    CONFIG_RANGES.coinMass.min, CONFIG_RANGES.coinMass.max, config.coinMass);
   card.append(coinSec.fieldset);
 
-  // -- gameplay section --
-  const gameSec = section('游戏');
-  const speedRow = sliderRow(
-    gameSec,
-    '最大速度',
-    CONFIG_RANGES.maxShotSpeed.min,
-    CONFIG_RANGES.maxShotSpeed.max,
-    config.maxShotSpeed,
-  );
-  const aiRow = sliderRow(
-    gameSec,
-    '游戏难度',
-    CONFIG_RANGES.aiAngleSamples.min,
-    CONFIG_RANGES.aiAngleSamples.max,
-    config.aiAngleSamples,
-  );
+  const gameSec = section('config.section.gameplay');
+  const speedRow = sliderRow(gameSec, 'config.label.maxShotSpeed',
+    CONFIG_RANGES.maxShotSpeed.min, CONFIG_RANGES.maxShotSpeed.max, config.maxShotSpeed);
+  const aiRow = sliderRow(gameSec, 'config.label.aiDifficulty',
+    CONFIG_RANGES.aiAngleSamples.min, CONFIG_RANGES.aiAngleSamples.max, config.aiAngleSamples);
   card.append(gameSec.fieldset);
 
-  // -- stones & bombs section --
-  const piecesSec = section('棋子与炸弹');
-  const stoneCountRow = sliderRow(
-    piecesSec,
-    '棋子数',
-    CONFIG_RANGES.stoneCount.min,
-    CONFIG_RANGES.stoneCount.max,
-    config.stoneCount,
-  );
-  const bombCountRow = sliderRow(
-    piecesSec,
-    '炸弹数',
-    CONFIG_RANGES.bombCount.min,
-    CONFIG_RANGES.bombCount.max,
-    config.bombCount,
-  );
-  const explosionRow = sliderRow(
-    piecesSec,
-    '爆破半径',
-    CONFIG_RANGES.explosionRadius.min,
-    CONFIG_RANGES.explosionRadius.max,
-    config.explosionRadius,
-  );
-  const chainRow = checkboxRow(piecesSec, '连锁爆破', config.chainBombs);
-  const misfireRow = checkboxRow(piecesSec, '不会被误炸', config.misfireProtection);
+  const piecesSec = section('config.section.pieces');
+  const stoneCountRow = sliderRow(piecesSec, 'config.label.stoneCount',
+    CONFIG_RANGES.stoneCount.min, CONFIG_RANGES.stoneCount.max, config.stoneCount);
+  const bombCountRow = sliderRow(piecesSec, 'config.label.bombCount',
+    CONFIG_RANGES.bombCount.min, CONFIG_RANGES.bombCount.max, config.bombCount);
+  const explosionRow = sliderRow(piecesSec, 'config.label.explosionRadius',
+    CONFIG_RANGES.explosionRadius.min, CONFIG_RANGES.explosionRadius.max, config.explosionRadius);
+  const chainRow = checkboxRow(piecesSec, 'config.label.chainBombs', config.chainBombs);
+  const misfireRow = checkboxRow(piecesSec, 'config.label.misfireProtection', config.misfireProtection);
   card.append(piecesSec.fieldset);
 
-  // -- misc --
-  const miscSec = section('其它');
-  const soundRow = document.createElement('label');
-  soundRow.className = 'config-row checkbox';
-  const soundInput = document.createElement('input');
-  soundInput.type = 'checkbox';
-  soundInput.checked = config.soundEnabled;
-  soundRow.append(soundInput, document.createTextNode(' 声音提示'));
-  miscSec.fieldset.append(soundRow);
+  const miscSec = section('config.section.other');
+  const soundRow = checkboxRow(miscSec, 'config.label.sound', config.soundEnabled);
   card.append(miscSec.fieldset);
 
-  // -- actions --
   const actions = document.createElement('div');
   actions.className = 'config-actions';
 
   const okBtn = document.createElement('button');
   okBtn.type = 'button';
   okBtn.className = 'primary';
-  okBtn.textContent = '确定';
+  trackLabel(okBtn, 'config.btn.ok');
 
   const cancelBtn = document.createElement('button');
   cancelBtn.type = 'button';
-  cancelBtn.textContent = '取消';
+  trackLabel(cancelBtn, 'config.btn.cancel');
 
   const resetBtn = document.createElement('button');
   resetBtn.type = 'button';
-  resetBtn.textContent = '恢复默认';
+  trackLabel(resetBtn, 'config.btn.reset');
 
   actions.append(okBtn, cancelBtn, resetBtn);
   card.append(actions);
 
   overlay.append(card);
   parent.append(overlay);
+
+  subscribeLocale(() => {
+    for (const { node, key } of labels) node.textContent = t(key);
+    for (const fn of refreshers) fn();
+  });
 
   const reflectFromConfig = () => {
     p1ColorInput.value = config.p1Color;
@@ -141,7 +117,7 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     massRow.set(config.coinMass);
     speedRow.set(config.maxShotSpeed);
     aiRow.set(config.aiAngleSamples);
-    soundInput.checked = config.soundEnabled;
+    soundRow.set(config.soundEnabled);
     stoneCountRow.set(config.stoneCount);
     bombCountRow.set(config.bombCount);
     explosionRow.set(config.explosionRadius);
@@ -157,7 +133,7 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     coinMass: massRow.get(),
     maxShotSpeed: speedRow.get(),
     aiAngleSamples: aiRow.get(),
-    soundEnabled: soundInput.checked,
+    soundEnabled: soundRow.get(),
     stoneCount: stoneCountRow.get(),
     bombCount: bombCountRow.get(),
     explosionRadius: explosionRow.get(),
@@ -165,9 +141,7 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     misfireProtection: misfireRow.get(),
   });
 
-  const close = () => {
-    overlay.hidden = true;
-  };
+  const close = () => { overlay.hidden = true; };
 
   okBtn.addEventListener('click', () => {
     applyConfig(readFromUi());
@@ -187,7 +161,7 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     massRow.set(CONFIG_DEFAULTS.coinMass);
     speedRow.set(CONFIG_DEFAULTS.maxShotSpeed);
     aiRow.set(CONFIG_DEFAULTS.aiAngleSamples);
-    soundInput.checked = CONFIG_DEFAULTS.soundEnabled;
+    soundRow.set(CONFIG_DEFAULTS.soundEnabled);
     stoneCountRow.set(CONFIG_DEFAULTS.stoneCount);
     bombCountRow.set(CONFIG_DEFAULTS.bombCount);
     explosionRow.set(CONFIG_DEFAULTS.explosionRadius);
@@ -202,101 +176,97 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     },
     close,
   };
-}
 
-function section(name: string): { fieldset: HTMLFieldSetElement } {
-  const fs = document.createElement('fieldset');
-  fs.className = 'config-section';
-  const legend = document.createElement('legend');
-  legend.textContent = name;
-  fs.append(legend);
-  return { fieldset: fs };
-}
+  // ---- helpers (closed over `labels`, `refreshers`) ----
 
-function colorRow(
-  parent: { fieldset: HTMLFieldSetElement },
-  label: string,
-  initial: string,
-): HTMLInputElement {
-  const row = document.createElement('label');
-  row.className = 'config-row';
-  row.append(document.createTextNode(label));
-  const input = document.createElement('input');
-  input.type = 'color';
-  input.value = initial;
-  row.append(input);
-  parent.fieldset.append(row);
-  return input;
-}
+  function section(legendKey: StringKey): { fieldset: HTMLFieldSetElement } {
+    const fs = document.createElement('fieldset');
+    fs.className = 'config-section';
+    const legend = document.createElement('legend');
+    trackLabel(legend, legendKey);
+    fs.append(legend);
+    return { fieldset: fs };
+  }
 
-interface SliderRow {
-  set(v: number): void;
-  get(): number;
-}
+  function colorRow(
+    parent: { fieldset: HTMLFieldSetElement },
+    labelKey: StringKey,
+    initial: string,
+  ): HTMLInputElement {
+    const row = document.createElement('label');
+    row.className = 'config-row';
+    const text = document.createTextNode('');
+    trackLabel(text, labelKey);
+    row.append(text);
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = initial;
+    row.append(input);
+    parent.fieldset.append(row);
+    return input;
+  }
 
-interface CheckboxRow {
-  set(v: boolean): void;
-  get(): boolean;
-}
+  function checkboxRow(
+    parent: { fieldset: HTMLFieldSetElement },
+    labelKey: StringKey,
+    initial: boolean,
+  ): CheckboxRow {
+    const row = document.createElement('label');
+    row.className = 'config-row checkbox';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = initial;
+    const text = document.createTextNode('');
+    const refresh = () => { text.textContent = ' ' + t(labelKey); };
+    refresh();
+    refreshers.push(refresh);
+    row.append(input, text);
+    parent.fieldset.append(row);
+    return {
+      set(v) { input.checked = v; },
+      get() { return input.checked; },
+    };
+  }
 
-function checkboxRow(
-  parent: { fieldset: HTMLFieldSetElement },
-  label: string,
-  initial: boolean,
-): CheckboxRow {
-  const row = document.createElement('label');
-  row.className = 'config-row checkbox';
-  const input = document.createElement('input');
-  input.type = 'checkbox';
-  input.checked = initial;
-  row.append(input, document.createTextNode(' ' + label));
-  parent.fieldset.append(row);
-  return {
-    set(v) {
-      input.checked = v;
-    },
-    get() {
-      return input.checked;
-    },
-  };
-}
+  function sliderRow(
+    parent: { fieldset: HTMLFieldSetElement },
+    labelKey: StringKey,
+    min: number,
+    max: number,
+    initial: number,
+  ): SliderRow {
+    const row = document.createElement('label');
+    row.className = 'config-row';
+    const text = document.createTextNode('');
+    trackLabel(text, labelKey);
+    row.append(text);
 
-function sliderRow(
-  parent: { fieldset: HTMLFieldSetElement },
-  label: string,
-  min: number,
-  max: number,
-  initial: number,
-): SliderRow {
-  const row = document.createElement('label');
-  row.className = 'config-row';
-  row.append(document.createTextNode(label));
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.min = String(min);
+    input.max = String(max);
+    input.step = '1';
+    input.value = String(initial);
 
-  const input = document.createElement('input');
-  input.type = 'range';
-  input.min = String(min);
-  input.max = String(max);
-  input.step = '1';
-  input.value = String(initial);
+    const valueEl = document.createElement('span');
+    valueEl.className = 'config-value';
+    valueEl.textContent = String(initial);
 
-  const valueEl = document.createElement('span');
-  valueEl.className = 'config-value';
-  valueEl.textContent = String(initial);
+    input.addEventListener('input', () => {
+      valueEl.textContent = input.value;
+    });
 
-  input.addEventListener('input', () => {
-    valueEl.textContent = input.value;
-  });
+    row.append(input, valueEl);
+    parent.fieldset.append(row);
 
-  row.append(input, valueEl);
-  parent.fieldset.append(row);
-
-  return {
-    set(v) {
-      input.value = String(v);
-      valueEl.textContent = String(v);
-    },
-    get() {
-      return Number(input.value);
-    },
-  };
+    return {
+      set(v) {
+        input.value = String(v);
+        valueEl.textContent = String(v);
+      },
+      get() {
+        return Number(input.value);
+      },
+    };
+  }
 }

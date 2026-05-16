@@ -11,7 +11,10 @@
       "Bash(mv /tmp/out.utf8 COIN2000.PAS)",
       "Bash(sed -n '107p' COIN2000.PAS)",
       "Bash(npm install *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(curl -sS http://localhost:5175/)",
+      "Bash(curl -sS http://localhost:5175/src/i18n.ts)",
+      "Bash(curl -sS http://localhost:5176/src/game/maps.ts)"
     ]
   }
 }
