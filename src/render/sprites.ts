@@ -11,6 +11,7 @@ const BOMB_OUTER = '#222222';
 const BOMB_INNER = '#f5e8cb';
 
 let wallPattern: CanvasPattern | null = null;
+let feltPattern: CanvasPattern | null = null;
 
 function getWallPattern(ctx: CanvasRenderingContext2D): CanvasPattern | null {
   if (wallPattern) return wallPattern;
@@ -32,6 +33,56 @@ function getWallPattern(ctx: CanvasRenderingContext2D): CanvasPattern | null {
   return wallPattern;
 }
 
+function getFeltPattern(ctx: CanvasRenderingContext2D): CanvasPattern | null {
+  if (feltPattern) return feltPattern;
+  const size = 96;
+  const tile = document.createElement('canvas');
+  tile.width = size;
+  tile.height = size;
+  const tctx = tile.getContext('2d');
+  if (!tctx) return null;
+
+  tctx.fillStyle = '#173d2c';
+  tctx.fillRect(0, 0, size, size);
+
+  // Stable pseudo-random sequence so the tile edges seam reasonably.
+  let seed = 1337;
+  const rand = () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+
+  // Dense fine speckles — felt-like fuzz.
+  const speckleCount = size * size * 0.55;
+  for (let i = 0; i < speckleCount; i++) {
+    const x = rand() * size;
+    const y = rand() * size;
+    const t = rand();
+    const a = 0.05 + rand() * 0.08;
+    tctx.fillStyle = t < 0.5
+      ? `rgba(255,255,255,${a.toFixed(3)})`
+      : `rgba(0,0,0,${a.toFixed(3)})`;
+    tctx.fillRect(x, y, 1, 1);
+  }
+
+  // A handful of slightly larger fibers for visual variety.
+  for (let i = 0; i < 40; i++) {
+    const x = rand() * size;
+    const y = rand() * size;
+    const len = 2 + rand() * 4;
+    const ang = rand() * Math.PI;
+    tctx.strokeStyle = `rgba(255,255,255,${(0.04 + rand() * 0.05).toFixed(3)})`;
+    tctx.lineWidth = 0.6;
+    tctx.beginPath();
+    tctx.moveTo(x, y);
+    tctx.lineTo(x + Math.cos(ang) * len, y + Math.sin(ang) * len);
+    tctx.stroke();
+  }
+
+  feltPattern = ctx.createPattern(tile, 'repeat');
+  return feltPattern;
+}
+
 const DEFAULT_WALLS: Walls = {
   top: 'kill',
   bottom: 'kill',
@@ -44,7 +95,20 @@ export function drawTable(
   table: Table,
   walls: Walls = DEFAULT_WALLS,
 ): void {
-  ctx.fillStyle = '#173d2c';
+  const felt = getFeltPattern(ctx);
+  ctx.fillStyle = felt ?? '#173d2c';
+  ctx.fillRect(0, 0, table.width, table.height);
+
+  // Soft center highlight, like an overhead lamp.
+  const cx = table.width / 2;
+  const cy = table.height / 2;
+  const innerR = Math.min(table.width, table.height) * 0.15;
+  const outerR = Math.hypot(table.width, table.height) * 0.6;
+  const lamp = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
+  lamp.addColorStop(0, 'rgba(255,255,230,0.07)');
+  lamp.addColorStop(0.55, 'rgba(0,0,0,0)');
+  lamp.addColorStop(1, 'rgba(0,0,0,0.32)');
+  ctx.fillStyle = lamp;
   ctx.fillRect(0, 0, table.width, table.height);
 
   const pattern = getWallPattern(ctx);
