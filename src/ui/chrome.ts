@@ -20,12 +20,15 @@ export interface ChromeOptions {
 
 export interface ChromeHandle {
   setMusicOn(on: boolean): void;
+  setReplayMode(on: boolean): void;
 }
 
 export function mountChrome(root: HTMLElement, opts: ChromeOptions): ChromeHandle {
   let p2Mode = opts.initialP2Mode;
   let musicOn = opts.initialMusicOn;
   let musicBtnEl: HTMLButtonElement | null = null;
+  let controlsEl: HTMLElement | null = null;
+  let replayMode = false;
 
   const refreshMusicBtn = () => {
     if (!musicBtnEl) return;
@@ -102,6 +105,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): ChromeHandl
     langBtn.addEventListener('click', toggleLocale);
 
     controls.append(p2Label, mapLabel, restart, musicBtn, langBtn);
+    controlsEl = controls;
+    controls.hidden = replayMode;
     root.append(title, controls);
   };
 
@@ -113,6 +118,10 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): ChromeHandl
     setMusicOn(on: boolean) {
       musicOn = on;
       refreshMusicBtn();
+    },
+    setReplayMode(on: boolean) {
+      replayMode = on;
+      if (controlsEl) controlsEl.hidden = on;
     },
   };
 }

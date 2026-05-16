@@ -35,12 +35,13 @@ export class AimController {
     private readonly canvas: HTMLCanvasElement,
     private readonly view: CanvasView,
   ) {
+    canvas.addEventListener('mousedown', this.handleMouseDown);
+    canvas.addEventListener('contextmenu', this.handleContextMenu);
     canvas.addEventListener('pointerdown', this.handleDown);
     canvas.addEventListener('pointermove', this.handleMove);
     canvas.addEventListener('pointerup', this.handleUp);
     canvas.addEventListener('pointercancel', this.handleAbort);
     canvas.addEventListener('pointerleave', this.handleAbort);
-    canvas.addEventListener('contextmenu', this.handleContextMenu);
     document.addEventListener('keydown', this.handleKey);
   }
 
@@ -80,18 +81,25 @@ export class AimController {
     };
   }
 
-  private handleDown = (e: PointerEvent) => {
-    if (this.activeOwner === null || this.world === null) return;
-
+  private handleMouseDown = (e: MouseEvent) => {
     // Right-click while aiming cancels the in-flight drag so the user can pick
     // a different coin.
-    if (e.button === 2 && this.state.kind === 'dragging') {
-      e.preventDefault();
+    if (e.button !== 2) return;
+    if (this.activeOwner === null) return;
+    e.preventDefault();
+    if (this.state.kind === 'dragging') {
       this.releaseCapture(this.state.pointerId);
       this.state = { kind: 'idle' };
-      return;
     }
+  };
 
+  private handleContextMenu = (e: MouseEvent) => {
+    // Suppress the native menu so right-click stays usable as a cancel gesture.
+    e.preventDefault();
+  };
+
+  private handleDown = (e: PointerEvent) => {
+    if (this.activeOwner === null || this.world === null) return;
     if (this.state.kind !== 'idle') return;
     if (e.button !== 0) return;
     const screen = this.toScreen(e);
@@ -107,12 +115,6 @@ export class AimController {
       current: screen,
       pointerId: e.pointerId,
     };
-  };
-
-  private handleContextMenu = (e: MouseEvent) => {
-    // Only suppress the native menu while the aim controller is active — that
-    // way right-click on the canvas can be used as a cancel gesture.
-    if (this.activeOwner !== null) e.preventDefault();
   };
 
   private handleMove = (e: PointerEvent) => {

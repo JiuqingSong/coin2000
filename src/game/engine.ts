@@ -6,9 +6,11 @@ import type { Player } from '../players/player';
 import type { Bell } from '../audio/bell';
 import { config } from './config';
 import { SIM_DT_MS } from './constants';
+import type { MapData } from './mapData';
+import { worldFromMapData } from './mapData';
 import { allSettled, step, type PhysicsEvents } from './physics';
 import { roundEnded, type RoundResult } from './rules';
-import { initialWorld } from './setup';
+import { materializeSelectedMap } from './setup';
 import { draw } from '../render/renderer';
 
 export interface TurnSettled {
@@ -25,6 +27,7 @@ export interface EngineOptions {
   onFrame?(world: World): void;
   onTurnStart?(owner: Owner): void;
   onShotFired?(shooter: Owner): void;
+  onShotRecorded?(shooter: Owner.P1 | Owner.P2, coinId: CoinId, vel: Vec2): void;
   onTurnSettled?(info: TurnSettled): void;
   onRoundEnd?(result: RoundResult): void;
 }
@@ -39,9 +42,11 @@ export class Engine {
   private shooter: Owner | null = null;
   private preShotP1 = 0;
   private preShotP2 = 0;
+  private currentMap: MapData;
 
   constructor(private readonly opts: EngineOptions) {
-    this.world = initialWorld();
+    this.currentMap = materializeSelectedMap();
+    this.world = worldFromMapData(this.currentMap);
     this.players = {
       [Owner.P1]: opts.buildPlayer(Owner.P1),
       [Owner.P2]: opts.buildPlayer(Owner.P2),
@@ -55,9 +60,18 @@ export class Engine {
       : undefined;
   }
 
+  getCurrentMap(): MapData {
+    return this.currentMap;
+  }
+
   start(): void {
+    this.startWithMap(materializeSelectedMap());
+  }
+
+  startWithMap(map: MapData): void {
     this.players[this.world.current].cancelTurn();
-    this.world = initialWorld();
+    this.currentMap = map;
+    this.world = worldFromMapData(map);
     this.world.phase = Phase.Aiming;
     this.world.current = Owner.P1;
     this.last = null;
@@ -69,6 +83,14 @@ export class Engine {
       this.running = true;
       requestAnimationFrame(this.tick);
     }
+  }
+
+  stop(): void {
+    this.running = false;
+    this.players[Owner.P1].cancelTurn();
+    this.players[Owner.P2].cancelTurn();
+    this.opts.aim.stop();
+    this.world.phase = Phase.Idle;
   }
 
   setPlayer(owner: Owner.P1 | Owner.P2, player: Player): void {
@@ -83,6 +105,7 @@ export class Engine {
   }
 
   private tick = (now: number) => {
+    if (!this.running) return;
     const elapsed = this.last === null ? 0 : now - this.last;
     this.last = now;
     this.acc += elapsed;
@@ -116,6 +139,7 @@ export class Engine {
     c.vel = { x: vel.x, y: vel.y };
     this.world.phase = Phase.Simulating;
     this.opts.bell?.ringShoot();
+    this.opts.onShotRecorded?.(this.shooter, coinId, { x: vel.x, y: vel.y });
     this.opts.onShotFired?.(this.shooter);
   };
 

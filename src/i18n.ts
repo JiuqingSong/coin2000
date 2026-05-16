@@ -116,7 +116,7 @@ const ZH_STRINGS = {
     '• 悬停在自己的硬币上，硬币变亮，表示可以操作。\n' +
     '• 拖动硬币，向您希望飞行方向的反方向拖动后松开。\n' +
     '• 拖得越远，力道越大；箭头显示方向和力度。\n' +
-    '• 拖动时按 Esc 取消本次射击。\n\n' +
+    '• 拖动时按 Esc 或单击鼠标右键，取消当前瞄准，再选择其他硬币。\n\n' +
     '■ 棋子\n' +
     '• 硬币（1 和 2）：双方棋子，将对手全部击落即获胜。\n' +
     '• 石头：中立重物，可挡路、可作反弹，出界不会消失。\n' +
@@ -138,6 +138,8 @@ const ZH_STRINGS = {
   'hud.count.p2.ai': '电脑',
   'hud.count.p2.human': '对手',
   'hud.playAgain': '再来一局',
+  'hud.saveReplay': '保存录像',
+  'hud.backToWelcome': '返回主菜单',
   'hud.winner.draw': '平局',
   'hud.winner.p1': '您获胜',
   'hud.winner.p2.ai': '电脑获胜',
@@ -188,6 +190,21 @@ const ZH_STRINGS = {
   'map.fortified.desc': '棋子分列两军阵前作为屏障，攻防皆难。',
   'map.crossed.name': '换边',
   'map.crossed.desc': '硬币排在上下两边，左右成为悬崖。',
+
+  // save / load
+  'save.title': '保存录像',
+  'save.filename': '文件名',
+  'save.btn.save': '保存',
+  'save.btn.cancel': '取消',
+  'save.error.title': '无法读取录像',
+  'save.error.badJson': '文件内容不是有效的 JSON。',
+  'save.error.badShape': '文件结构不正确。',
+  'save.error.wrongApp': '这不是 COIN 2000 的录像文件。',
+  'save.error.wrongVersion': '该录像版本不被支持。',
+  'save.error.badMap': '录像中的地图信息缺失或损坏。',
+  'save.error.badConfig': '录像中的设置信息缺失或损坏。',
+  'save.error.badShots': '录像中的出手记录缺失或损坏。',
+  'save.error.badResult': '录像中的胜负信息缺失或损坏。',
 } as const;
 
 const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
@@ -230,7 +247,7 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
     '• Hover over one of your coins — it brightens to show it’s selectable.\n' +
     '• Drag a coin in the direction opposite to where you want it to fly, then release.\n' +
     '• Longer drag = stronger shot; the arrow shows direction and power.\n' +
-    '• Press Esc while dragging to cancel.\n\n' +
+    '• Press Esc or right-click while dragging to cancel and pick a different coin.\n\n' +
     '■ Pieces\n' +
     '• Coins (1 and 2): your team and your opponent’s — eliminate them all to win.\n' +
     '• Stones: heavy neutral pieces. They block paths and bounce shots; never knocked out.\n' +
@@ -252,6 +269,8 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'hud.count.p2.ai': 'CPU',
   'hud.count.p2.human': 'P2',
   'hud.playAgain': 'Play Again',
+  'hud.saveReplay': 'Save Replay',
+  'hud.backToWelcome': 'Back to Menu',
   'hud.winner.draw': 'Draw',
   'hud.winner.p1': 'You Win',
   'hud.winner.p2.ai': 'Computer Wins',
@@ -302,6 +321,21 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'map.fortified.desc': 'Stones flank each player as a defensive barrier instead of sitting in the center.',
   'map.crossed.name': 'Crossed',
   'map.crossed.desc': "Coins line the top and bottom; the left and right edges become the kill zone.",
+
+  // save / load
+  'save.title': 'Save Replay',
+  'save.filename': 'File name',
+  'save.btn.save': 'Save',
+  'save.btn.cancel': 'Cancel',
+  'save.error.title': 'Could not load replay',
+  'save.error.badJson': 'The file is not valid JSON.',
+  'save.error.badShape': 'The file structure is unexpected.',
+  'save.error.wrongApp': 'This is not a COIN 2000 replay file.',
+  'save.error.wrongVersion': 'This replay version is not supported.',
+  'save.error.badMap': 'The map data in the replay is missing or damaged.',
+  'save.error.badConfig': 'The settings data in the replay is missing or damaged.',
+  'save.error.badShots': 'The shot list in the replay is missing or damaged.',
+  'save.error.badResult': 'The result data in the replay is missing or damaged.',
 };
 
 const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
@@ -344,7 +378,7 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
     '• 自分のコインにカーソルを合わせると明るくなり、選択可能になります。\n' +
     '• 飛ばしたい方向の逆へドラッグし、離して発射。\n' +
     '• 引く距離が長いほど強く飛びます。矢印で方向と力を表示。\n' +
-    '• ドラッグ中に Esc でキャンセル。\n\n' +
+    '• ドラッグ中に Esc または右クリックでキャンセルし、別のコインを選び直せます。\n\n' +
     '■ 駒\n' +
     '• コイン（1 と 2）：自分と相手の駒。全滅させれば勝ち。\n' +
     '• 石：中立の重い駒。進路を塞ぎ、反射に使えます。盤外に落ちても消えません。\n' +
@@ -366,6 +400,8 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'hud.count.p2.ai': 'CPU',
   'hud.count.p2.human': 'P2',
   'hud.playAgain': 'もう一度',
+  'hud.saveReplay': 'リプレイを保存',
+  'hud.backToWelcome': 'メニューへ戻る',
   'hud.winner.draw': '引き分け',
   'hud.winner.p1': 'あなたの勝ち',
   'hud.winner.p2.ai': 'コンピュータの勝ち',
@@ -416,6 +452,21 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'map.fortified.desc': '石が各陣営の前に防壁として並ぶ。攻めも守りも難しい。',
   'map.crossed.name': '縦戦',
   'map.crossed.desc': 'コインは上下に並び、左右が崖になる。',
+
+  // save / load
+  'save.title': 'リプレイを保存',
+  'save.filename': 'ファイル名',
+  'save.btn.save': '保存',
+  'save.btn.cancel': 'キャンセル',
+  'save.error.title': 'リプレイを読み込めません',
+  'save.error.badJson': 'ファイルが有効な JSON ではありません。',
+  'save.error.badShape': 'ファイル構造が想定外です。',
+  'save.error.wrongApp': 'COIN 2000 のリプレイファイルではありません。',
+  'save.error.wrongVersion': 'このリプレイのバージョンには対応していません。',
+  'save.error.badMap': 'リプレイのマップ情報が欠落しているか壊れています。',
+  'save.error.badConfig': 'リプレイの設定情報が欠落しているか壊れています。',
+  'save.error.badShots': 'リプレイのショット記録が欠落しているか壊れています。',
+  'save.error.badResult': 'リプレイの結果情報が欠落しているか壊れています。',
 };
 
 export type StringKey = keyof typeof ZH_STRINGS;

@@ -1,6 +1,7 @@
-import type { World } from './world';
+import { config } from './config';
 import { getSelectedMap } from './maps';
+import type { MapData } from './mapData';
 
-export function initialWorld(): World {
-  return getSelectedMap().build();
+export function materializeSelectedMap(): MapData {
+  return getSelectedMap().materialize(config);
 }

@@ -1,4 +1,4 @@
-import { subscribeLocale, t, toggleLocale } from '../i18n';
+import { subscribeLocale, t, toggleLocale, type StringKey } from '../i18n';
 import {
   MAPS,
   getSelectedMapId,
@@ -6,22 +6,42 @@ import {
   subscribeMap,
   type MapId,
 } from '../game/maps';
+import { parseSaveFile, SaveFileParseError, type SaveFileErrorReason } from '../replay/load';
+import type { SaveFile } from '../replay/types';
 
 export interface WelcomeOptions {
   onStart(): void;
   onSettings(): void;
+  onLoadReplay(save: SaveFile): void;
 }
 
 export interface WelcomeHandle {
   hide(): void;
 }
 
-type ModalKind = 'about' | 'replay' | 'guide';
+type ModalKind = 'about' | 'guide' | 'loadError';
 
-const MODAL_CONFIG: Record<ModalKind, { titleKey: 'welcome.about.title' | 'welcome.replay.title' | 'welcome.guide.title'; bodyKey: 'welcome.about.body' | 'welcome.replay.body' | 'welcome.guide.body'; closable: boolean; cardClass?: string }> = {
+interface ModalConfig {
+  titleKey: StringKey;
+  bodyKey?: StringKey;
+  closable: boolean;
+  cardClass?: string;
+}
+
+const MODAL_CONFIG: Record<Exclude<ModalKind, 'loadError'>, ModalConfig> = {
   about: { titleKey: 'welcome.about.title', bodyKey: 'welcome.about.body', closable: true },
-  replay: { titleKey: 'welcome.replay.title', bodyKey: 'welcome.replay.body', closable: true },
   guide: { titleKey: 'welcome.guide.title', bodyKey: 'welcome.guide.body', closable: true, cardClass: 'guide' },
+};
+
+const LOAD_ERROR_BODY_KEY: Record<SaveFileErrorReason, StringKey> = {
+  badJson: 'save.error.badJson',
+  badShape: 'save.error.badShape',
+  wrongApp: 'save.error.wrongApp',
+  wrongVersion: 'save.error.wrongVersion',
+  badMap: 'save.error.badMap',
+  badConfig: 'save.error.badConfig',
+  badShots: 'save.error.badShots',
+  badResult: 'save.error.badResult',
 };
 
 export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): WelcomeHandle {
@@ -68,7 +88,13 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
   const btnReplay = makeActionButton(false);
   actions.append(btnStart, btnReplay);
 
-  main.append(logo, signature, mapPicker.root, actions);
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.json,application/json';
+  fileInput.hidden = true;
+  fileInput.style.display = 'none';
+
+  main.append(logo, signature, mapPicker.root, actions, fileInput);
   body.append(sidebar, main);
 
   const footer = document.createElement('div');
@@ -83,6 +109,8 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
   let modalBodyEl: HTMLElement | null = null;
   let modalBackBtn: HTMLButtonElement | null = null;
   let currentModalKind: ModalKind | null = null;
+  let currentModalTitleKey: StringKey | null = null;
+  let currentModalBodyKey: StringKey | null = null;
 
   const closeModal = () => {
     if (modal) {
@@ -92,23 +120,46 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
       modalBodyEl = null;
       modalBackBtn = null;
       currentModalKind = null;
+      currentModalTitleKey = null;
+      currentModalBodyKey = null;
     }
   };
 
-  const openModal = (kind: ModalKind) => {
-    closeModal();
-    currentModalKind = kind;
+  const openCfgModal = (kind: 'about' | 'guide') => {
     const cfg = MODAL_CONFIG[kind];
+    openModal({
+      kind,
+      titleKey: cfg.titleKey,
+      bodyKey: cfg.bodyKey ?? null,
+      closable: cfg.closable,
+      cardClass: cfg.cardClass,
+    });
+  };
+
+  const openModal = (m: {
+    kind: ModalKind;
+    titleKey: StringKey;
+    bodyKey: StringKey | null;
+    closable: boolean;
+    cardClass?: string;
+  }) => {
+    closeModal();
+    currentModalKind = m.kind;
+    currentModalTitleKey = m.titleKey;
+    currentModalBodyKey = m.bodyKey;
     modal = document.createElement('div');
     modal.className = 'welcome-modal';
     const card = document.createElement('div');
-    card.className = 'welcome-modal-card' + (cfg.cardClass ? ' ' + cfg.cardClass : '');
+    card.className = 'welcome-modal-card' + (m.cardClass ? ' ' + m.cardClass : '');
     modalTitleEl = document.createElement('h3');
-    modalTitleEl.textContent = t(cfg.titleKey);
-    modalBodyEl = document.createElement('p');
-    modalBodyEl.textContent = t(cfg.bodyKey);
-    card.append(modalTitleEl, modalBodyEl);
-    if (cfg.closable) {
+    modalTitleEl.textContent = t(m.titleKey);
+    card.append(modalTitleEl);
+    if (m.bodyKey) {
+      modalBodyEl = document.createElement('p');
+      modalBodyEl.textContent = t(m.bodyKey);
+      card.append(modalBodyEl);
+    }
+    if (m.closable) {
       modalBackBtn = document.createElement('button');
       modalBackBtn.type = 'button';
       modalBackBtn.textContent = t('welcome.modal.back');
@@ -131,10 +182,9 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
     footer.textContent = t('welcome.footer');
     mapPicker.refresh();
 
-    if (currentModalKind) {
-      const cfg = MODAL_CONFIG[currentModalKind];
-      if (modalTitleEl) modalTitleEl.textContent = t(cfg.titleKey);
-      if (modalBodyEl) modalBodyEl.textContent = t(cfg.bodyKey);
+    if (currentModalKind && currentModalTitleKey) {
+      if (modalTitleEl) modalTitleEl.textContent = t(currentModalTitleKey);
+      if (modalBodyEl && currentModalBodyKey) modalBodyEl.textContent = t(currentModalBodyKey);
       if (modalBackBtn) modalBackBtn.textContent = t('welcome.modal.back');
     }
   };
@@ -145,10 +195,32 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
 
   btnStart.addEventListener('click', () => opts.onStart());
   btnSettings.addEventListener('click', () => opts.onSettings());
-  btnAbout.addEventListener('click', () => openModal('about'));
-  btnReplay.addEventListener('click', () => openModal('replay'));
-  btnGuide.addEventListener('click', () => openModal('guide'));
+  btnAbout.addEventListener('click', () => openCfgModal('about'));
+  btnGuide.addEventListener('click', () => openCfgModal('guide'));
   btnLang.addEventListener('click', toggleLocale);
+
+  btnReplay.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (!file) return;
+    let saveFile: SaveFile;
+    try {
+      const text = await file.text();
+      saveFile = parseSaveFile(text);
+    } catch (err) {
+      const reason: SaveFileErrorReason =
+        err instanceof SaveFileParseError ? err.reason : 'badJson';
+      openModal({
+        kind: 'loadError',
+        titleKey: 'save.error.title',
+        bodyKey: LOAD_ERROR_BODY_KEY[reason],
+        closable: true,
+      });
+      return;
+    }
+    opts.onLoadReplay(saveFile);
+  });
 
   return {
     hide() {

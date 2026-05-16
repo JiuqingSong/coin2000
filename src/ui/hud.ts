@@ -4,18 +4,25 @@ import type { World } from '../game/world';
 import type { RoundResult } from '../game/rules';
 
 export type P2Mode = 'ai' | 'human';
+export type OverlayMode = 'play' | 'replay';
+
+export interface HudCallbacks {
+  onPlayAgain(): void;
+  onSaveReplay(): void;
+  onBackToWelcome(): void;
+}
 
 export interface HudHandle {
   update(world: World): void;
   setP2Mode(mode: P2Mode): void;
-  showResult(result: RoundResult): void;
+  showResult(result: RoundResult, mode: OverlayMode): void;
   clearResult(): void;
 }
 
 export function mountHud(
   hudRoot: HTMLElement,
   overlayRoot: HTMLElement,
-  onPlayAgain: () => void,
+  callbacks: HudCallbacks,
   initialP2Mode: P2Mode = 'ai',
 ): HudHandle {
   hudRoot.replaceChildren();
@@ -41,10 +48,26 @@ export function mountHud(
   winnerText.className = 'winner';
   const banter = document.createElement('div');
   banter.className = 'banter';
-  const playAgain = document.createElement('button');
-  playAgain.type = 'button';
-  playAgain.addEventListener('click', onPlayAgain);
-  card.append(winnerText, banter, playAgain);
+
+  const buttonRow = document.createElement('div');
+  buttonRow.className = 'overlay-buttons';
+
+  const playAgainBtn = document.createElement('button');
+  playAgainBtn.type = 'button';
+  playAgainBtn.className = 'primary';
+  playAgainBtn.addEventListener('click', callbacks.onPlayAgain);
+
+  const saveBtn = document.createElement('button');
+  saveBtn.type = 'button';
+  saveBtn.addEventListener('click', callbacks.onSaveReplay);
+
+  const backBtn = document.createElement('button');
+  backBtn.type = 'button';
+  backBtn.className = 'primary';
+  backBtn.addEventListener('click', callbacks.onBackToWelcome);
+
+  buttonRow.append(playAgainBtn, saveBtn, backBtn);
+  card.append(winnerText, banter, buttonRow);
   overlayRoot.append(card);
   overlayRoot.hidden = true;
   overlayRoot.classList.remove('visible');
@@ -56,6 +79,7 @@ export function mountHud(
   let lastStatus = '';
   let p2Mode: P2Mode = initialP2Mode;
   let lastWorld: World | null = null;
+  let overlayMode: OverlayMode = 'play';
 
   // Result/banter state held across locale changes.
   let lastResult: RoundResult | null = null;
@@ -65,7 +89,16 @@ export function mountHud(
   const applyStaticLabels = () => {
     p1.label.textContent = t('hud.count.p1');
     p2.label.textContent = t(p2CountKey(p2Mode));
-    playAgain.textContent = t('hud.playAgain');
+    playAgainBtn.textContent = t('hud.playAgain');
+    saveBtn.textContent = t('hud.saveReplay');
+    backBtn.textContent = t('hud.backToWelcome');
+  };
+
+  const applyOverlayMode = () => {
+    const isReplay = overlayMode === 'replay';
+    playAgainBtn.hidden = isReplay;
+    saveBtn.hidden = isReplay;
+    backBtn.hidden = !isReplay;
   };
 
   const refreshStatus = () => {
@@ -109,9 +142,9 @@ export function mountHud(
   };
 
   applyStaticLabels();
+  applyOverlayMode();
   subscribeLocale(() => {
     applyStaticLabels();
-    // invalidate caches so next refresh re-reads strings
     lastPillText = '';
     lastStatus = '';
     refreshPill();
@@ -140,14 +173,16 @@ export function mountHud(
       refreshStatus();
       refreshResult();
     },
-    showResult(result: RoundResult) {
+    showResult(result: RoundResult, mode: OverlayMode) {
       lastResult = result;
+      overlayMode = mode;
       banterPoolKey =
         result.winner === Owner.P1 ? 'banter.p1' :
         result.winner === Owner.P2 ? 'banter.p2' :
         'banter.draw';
       const pool = tArray(banterPoolKey);
       banterIndex = pool.length > 0 ? Math.floor(Math.random() * pool.length) : 0;
+      applyOverlayMode();
       refreshResult();
       overlayRoot.hidden = false;
       requestAnimationFrame(() => overlayRoot.classList.add('visible'));
