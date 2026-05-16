@@ -65,6 +65,7 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     CONFIG_RANGES.maxShotSpeed.min, CONFIG_RANGES.maxShotSpeed.max, config.maxShotSpeed);
   const aiRow = sliderRow(gameSec, 'config.label.aiDifficulty',
     CONFIG_RANGES.aiAngleSamples.min, CONFIG_RANGES.aiAngleSamples.max, config.aiAngleSamples);
+  const keepShotRow = checkboxRow(gameSec, 'config.label.keepShotOnKill', config.keepShotOnKill);
   card.append(gameSec.fieldset);
 
   const piecesSec = section('config.section.pieces');
@@ -117,6 +118,7 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     massRow.set(config.coinMass);
     speedRow.set(config.maxShotSpeed);
     aiRow.set(config.aiAngleSamples);
+    keepShotRow.set(config.keepShotOnKill);
     soundRow.set(config.soundEnabled);
     stoneCountRow.set(config.stoneCount);
     bombCountRow.set(config.bombCount);
@@ -133,6 +135,7 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     coinMass: massRow.get(),
     maxShotSpeed: speedRow.get(),
     aiAngleSamples: aiRow.get(),
+    keepShotOnKill: keepShotRow.get(),
     soundEnabled: soundRow.get(),
     stoneCount: stoneCountRow.get(),
     bombCount: bombCountRow.get(),
@@ -161,6 +164,7 @@ export function mountConfig(parent: HTMLElement): ConfigDialogHandle {
     massRow.set(CONFIG_DEFAULTS.coinMass);
     speedRow.set(CONFIG_DEFAULTS.maxShotSpeed);
     aiRow.set(CONFIG_DEFAULTS.aiAngleSamples);
+    keepShotRow.set(CONFIG_DEFAULTS.keepShotOnKill);
     soundRow.set(CONFIG_DEFAULTS.soundEnabled);
     stoneCountRow.set(CONFIG_DEFAULTS.stoneCount);
     bombCountRow.set(CONFIG_DEFAULTS.bombCount);

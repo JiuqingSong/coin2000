@@ -12,6 +12,7 @@ export interface GameConfig {
   explosionRadius: number;
   chainBombs: boolean;
   misfireProtection: boolean;
+  keepShotOnKill: boolean;
 }
 
 export const CONFIG_DEFAULTS: Readonly<GameConfig> = {
@@ -28,6 +29,7 @@ export const CONFIG_DEFAULTS: Readonly<GameConfig> = {
   explosionRadius: 30,
   chainBombs: false,
   misfireProtection: false,
+  keepShotOnKill: true,
 };
 
 export const CONFIG_RANGES = {
@@ -97,6 +99,7 @@ function sanitize(next: GameConfig): GameConfig {
     explosionRadius: clampInt(next.explosionRadius, CONFIG_RANGES.explosionRadius.min, CONFIG_RANGES.explosionRadius.max),
     chainBombs: !!next.chainBombs,
     misfireProtection: !!next.misfireProtection,
+    keepShotOnKill: next.keepShotOnKill !== false,
   };
 }
 

@@ -4,6 +4,7 @@ import type { AimController } from '../input/aim';
 import type { CanvasView } from '../render/canvas';
 import type { Player } from '../players/player';
 import type { Bell } from '../audio/bell';
+import { config } from './config';
 import { SIM_DT_MS } from './constants';
 import { allSettled, step, type PhysicsEvents } from './physics';
 import { roundEnded, type RoundResult } from './rules';
@@ -118,12 +119,12 @@ export class Engine {
   };
 
   private onSettled(): void {
-    if (this.shooter !== null) {
-      this.opts.onTurnSettled?.({
-        shooter: this.shooter,
-        killedP1: this.preShotP1 - this.world.aliveCount[Owner.P1],
-        killedP2: this.preShotP2 - this.world.aliveCount[Owner.P2],
-      });
+    const shooter = this.shooter;
+    const killedP1 = this.preShotP1 - this.world.aliveCount[Owner.P1];
+    const killedP2 = this.preShotP2 - this.world.aliveCount[Owner.P2];
+
+    if (shooter !== null) {
+      this.opts.onTurnSettled?.({ shooter, killedP1, killedP2 });
       this.shooter = null;
     }
 
@@ -133,7 +134,18 @@ export class Engine {
       this.opts.onRoundEnd?.(result);
       return;
     }
-    this.world.current = this.world.current === Owner.P1 ? Owner.P2 : Owner.P1;
+
+    const enemyKilled = shooter === Owner.P1 ? killedP2 : killedP1;
+    const ownKilled = shooter === Owner.P1 ? killedP1 : killedP2;
+    const keepShot =
+      shooter !== null &&
+      config.keepShotOnKill &&
+      enemyKilled > 0 &&
+      ownKilled === 0;
+
+    if (!keepShot) {
+      this.world.current = this.world.current === Owner.P1 ? Owner.P2 : Owner.P1;
+    }
     this.world.phase = Phase.Aiming;
     this.players[this.world.current].startTurn(this.world, this.onShoot);
     this.opts.onTurnStart?.(this.world.current);
