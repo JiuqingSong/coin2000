@@ -2,11 +2,11 @@
 
 A browser port of the 1995 Turbo Pascal game **COIN 2026** (Yesoft / Song Jiuqing). Two players take turns flicking coins across a table — knock the other side's coins off the top or bottom edge to win.
 
-Play it: <https://jiuqingsong.github.io/coin2026/>
+Play it: <https://jiuqingsong.github.io/coin2000/>
 
 ## Controls
 
-- **Drag a coin in your color and release** — slingshot semantics: the shot fires in the *opposite* direction of your drag. Longer drag = harder shot, capped at maximum power.
+- **Drag a coin in your color and release** — slingshot semantics: the shot fires in the _opposite_ direction of your drag. Longer drag = harder shot, capped at maximum power.
 - One shot per turn. Turn passes automatically when the table settles.
 - Side walls bounce; top and bottom kill.
 - Round ends when a side has no coins left on the table.
