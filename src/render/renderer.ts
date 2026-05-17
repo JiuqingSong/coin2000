@@ -1,6 +1,6 @@
 import type { World } from '../game/world';
 import type { AimPreview } from '../input/aim';
-import type { CoinId } from '../game/types';
+import { CoinKind, type CoinId } from '../game/types';
 import type { CanvasView } from './canvas';
 import { config } from '../game/config';
 import { drawPiece, drawTable } from './sprites';
@@ -18,7 +18,13 @@ export function draw(
   view.applyTableTransform(world.table);
   drawTable(view.ctx, world.table, world.walls);
   const activeId = aim?.coinId ?? null;
+  // Holes are drawn first so dropping pieces shrink visually on top of them.
   for (const coin of world.coins) {
+    if (coin.kind !== CoinKind.Hole) continue;
+    drawPiece(view.ctx, coin, false, false);
+  }
+  for (const coin of world.coins) {
+    if (coin.kind === CoinKind.Hole) continue;
     const isActive = coin.id === activeId;
     const isHovered = !isActive && coin.id === hoverId;
     drawPiece(view.ctx, coin, isActive, isHovered);

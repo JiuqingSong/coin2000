@@ -2,6 +2,8 @@ import { config } from '../game/config';
 import {
   BOMB_MASS,
   BOMB_RADIUS,
+  HOLE_MASS,
+  HOLE_RADIUS,
   STONE_MASS,
   STONE_RADIUS,
   TABLE,
@@ -16,7 +18,7 @@ import { subscribeLocale, t, type StringKey } from '../i18n';
 import { createCanvasView } from '../render/canvas';
 import { drawPiece, drawTable } from '../render/sprites';
 
-type ToolKind = 'select' | 'erase' | 'p1' | 'p2' | 'stone' | 'bomb' | 'tree';
+type ToolKind = 'select' | 'erase' | 'p1' | 'p2' | 'stone' | 'bomb' | 'tree' | 'hole';
 type WallEdge = 'top' | 'bottom' | 'left' | 'right';
 
 export interface MapEditorOptions {
@@ -97,6 +99,7 @@ export function mountMapEditor(parent: HTMLElement, opts: MapEditorOptions): Map
     { tool: 'stone', labelKey: 'editor.tool.stone' },
     { tool: 'bomb', labelKey: 'editor.tool.bomb' },
     { tool: 'tree', labelKey: 'editor.tool.tree' },
+    { tool: 'hole', labelKey: 'editor.tool.hole' },
     { tool: 'erase', labelKey: 'editor.tool.erase' },
   ];
   for (const { tool, labelKey } of toolList) {
@@ -453,13 +456,17 @@ export function mountMapEditor(parent: HTMLElement, opts: MapEditorOptions): Map
     view.applyTableTransform(mapData.table);
     drawTable(ctx, mapData.table, mapData.walls);
 
-    // Snapshot to Coin shapes so drawPiece works.
+    // Snapshot to Coin shapes so drawPiece works. Holes are drawn in a first
+    // pass so other pieces (and the selection ring) appear on top of them.
     const world = worldFromMapData(mapData);
+    for (const c of world.coins) {
+      if (c.kind === CoinKind.Hole) drawPiece(ctx, c, false, false);
+    }
     for (let i = 0; i < world.coins.length; i++) {
       const c = world.coins[i]!;
       const isSelected = i === selectedIndex;
       const isHovered = i === hoverIndex;
-      drawPiece(ctx, c, isSelected, isHovered);
+      if (c.kind !== CoinKind.Hole) drawPiece(ctx, c, isSelected, isHovered);
       if (isSelected) {
         ctx.save();
         ctx.strokeStyle = 'rgba(255, 230, 120, 0.9)';
@@ -509,12 +516,12 @@ function cloneMap(m: MapData): MapData {
   };
 }
 
-function isPieceTool(tool: ToolKind): tool is 'p1' | 'p2' | 'stone' | 'bomb' | 'tree' {
+function isPieceTool(tool: ToolKind): tool is 'p1' | 'p2' | 'stone' | 'bomb' | 'tree' | 'hole' {
   return tool !== 'select' && tool !== 'erase';
 }
 
 function makePieceForTool(
-  tool: 'p1' | 'p2' | 'stone' | 'bomb' | 'tree',
+  tool: 'p1' | 'p2' | 'stone' | 'bomb' | 'tree' | 'hole',
   pos: Vec2,
 ): MapCoinData {
   switch (tool) {
@@ -562,6 +569,15 @@ function makePieceForTool(
         y: pos.y,
         radius: TREE_RADIUS,
         mass: TREE_MASS,
+      };
+    case 'hole':
+      return {
+        kind: CoinKind.Hole,
+        owner: Owner.Neutral,
+        x: pos.x,
+        y: pos.y,
+        radius: HOLE_RADIUS,
+        mass: HOLE_MASS,
       };
   }
 }

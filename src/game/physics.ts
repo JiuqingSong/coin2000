@@ -12,6 +12,7 @@ import {
 import { config } from './config';
 
 const COLLISION_SLACK = 2;
+const DROP_DECAY = 0.85;
 
 export interface PhysicsEvents {
   onCollide?(a: Coin, b: Coin): void;
@@ -23,13 +24,21 @@ export function step(world: World, events?: PhysicsEvents): void {
   const coins = world.coins;
   const prev: Array<{ x: number; y: number }> = new Array(coins.length);
 
-  // 1. Save pre-move positions, then move (exploding bombs and trees don't move)
+  // 1. Save pre-move positions, then move (exploding bombs, trees, and holes
+  //    don't move). Dropping pieces keep gliding along their last velocity but
+  //    decay rapidly — visually they sail forward as they shrink into a hole
+  //    or off a kill wall.
   for (let i = 0; i < coins.length; i++) {
     const c = coins[i]!;
     prev[i] = { x: c.pos.x, y: c.pos.y };
-    if (!c.alive || c.exploding || c.kind === CoinKind.Tree) continue;
+    if (c.exploding || c.kind === CoinKind.Tree || c.kind === CoinKind.Hole) continue;
+    if (!c.alive && !c.dropping) continue;
     c.pos.x += c.vel.x;
     c.pos.y += c.vel.y;
+    if (c.dropping) {
+      c.vel.x *= DROP_DECAY;
+      c.vel.y *= DROP_DECAY;
+    }
   }
 
   // 2. Advance ongoing explosion / drop animations
@@ -57,6 +66,20 @@ export function step(world: World, events?: PhysicsEvents): void {
       if (!a.alive || !b.alive) continue;
       if (a.exploding || b.exploding) continue;
       if (!overlaps(a, b)) continue;
+
+      const aHole = a.kind === CoinKind.Hole;
+      const bHole = b.kind === CoinKind.Hole;
+
+      // Holes swallow anything that touches them — including bombs, before
+      // the bomb branch gets a chance to detonate. The hole itself is
+      // unaffected. Two overlapping holes is a placement bug; ignore.
+      if (aHole || bHole) {
+        if (aHole && bHole) continue;
+        const hole = aHole ? a : b;
+        const victim = aHole ? b : a;
+        dropIntoHole(world, hole, victim, events);
+        continue;
+      }
 
       const aTree = a.kind === CoinKind.Tree;
       const bTree = b.kind === CoinKind.Tree;
@@ -104,7 +127,7 @@ export function step(world: World, events?: PhysicsEvents): void {
   const walls = world.walls;
   for (let i = 0; i < coins.length; i++) {
     const c = coins[i]!;
-    if (!c.alive || c.exploding || c.kind === CoinKind.Tree) continue;
+    if (!c.alive || c.exploding || c.kind === CoinKind.Tree || c.kind === CoinKind.Hole) continue;
     const r = c.radius;
     const outTop = c.pos.y < r;
     const outBottom = c.pos.y > world.table.height - r;
@@ -117,9 +140,10 @@ export function step(world: World, events?: PhysicsEvents): void {
       (outLeft && walls.left === 'kill') ||
       (outRight && walls.right === 'kill')
     ) {
+      // Velocity is intentionally preserved — step 1 keeps the piece gliding
+      // past the wall (decayed each tick) so it looks like it falls beyond
+      // the edge rather than stopping dead at the kill line.
       c.alive = false;
-      c.vel.x = 0;
-      c.vel.y = 0;
       c.dropping = {
         ticksLeft: DROP_TICKS,
         totalTicks: DROP_TICKS,
@@ -143,7 +167,7 @@ export function step(world: World, events?: PhysicsEvents): void {
 
   // 5. Friction
   for (const c of coins) {
-    if (!c.alive || c.exploding || c.kind === CoinKind.Tree) continue;
+    if (!c.alive || c.exploding || c.kind === CoinKind.Tree || c.kind === CoinKind.Hole) continue;
     const s = Math.hypot(c.vel.x, c.vel.y);
     if (s < SETTLED_EPS) {
       c.vel.x = 0;
@@ -253,6 +277,8 @@ function triggerExplosion(
       if (victim === bomb) continue;
       if (!victim.alive) continue;
       if (victim.exploding) continue;
+      // Holes are indestructible — blasts don't touch them.
+      if (victim.kind === CoinKind.Hole) continue;
 
       const dx = victim.pos.x - bomb.pos.x;
       const dy = victim.pos.y - bomb.pos.y;
@@ -281,6 +307,33 @@ function triggerExplosion(
       // the boom and sound chaotic.
     }
   }
+}
+
+// Geometric series sum Σ DECAY^k for k in [0, DROP_TICKS - 1]. A piece moved
+// each tick with its velocity scaled by DROP_DECAY accumulates this factor
+// times its initial velocity in total displacement, so velocity =
+// displacement / DROP_SERIES lands it exactly at the target.
+const DROP_SERIES = (1 - Math.pow(DROP_DECAY, DROP_TICKS)) / (1 - DROP_DECAY);
+
+function dropIntoHole(
+  world: World,
+  hole: Coin,
+  victim: Coin,
+  events: PhysicsEvents | undefined,
+): void {
+  // Override the piece's velocity so it drifts to the hole center over the
+  // drop animation, regardless of how fast the shot was. Without this, a
+  // fast-moving piece would visibly fly past the hole as it shrank.
+  victim.vel.x = (hole.pos.x - victim.pos.x) / DROP_SERIES;
+  victim.vel.y = (hole.pos.y - victim.pos.y) / DROP_SERIES;
+  victim.alive = false;
+  victim.dropping = {
+    ticksLeft: DROP_TICKS,
+    totalTicks: DROP_TICKS,
+    startRadius: victim.radius,
+  };
+  decrementAlive(world, victim);
+  events?.onDie?.(victim);
 }
 
 function decrementAlive(world: World, c: Coin): void {

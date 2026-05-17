@@ -210,6 +210,9 @@ export function drawPiece(
     case CoinKind.Tree:
       drawTree(ctx, coin);
       return;
+    case CoinKind.Hole:
+      drawHole(ctx, coin);
+      return;
     case CoinKind.Coin:
     default:
       drawCoin(ctx, coin, active, hovered);
@@ -243,6 +246,8 @@ function pieceBaseColor(coin: Coin): string {
       return BOMB_OUTER;
     case CoinKind.Tree:
       return TREE_COLOR;
+    case CoinKind.Hole:
+      return '#000000';
     case CoinKind.Coin:
     default:
       return coin.owner === Owner.P1 ? config.p1Color : config.p2Color;
@@ -564,6 +569,43 @@ function drawTree(ctx: CanvasRenderingContext2D, coin: Coin): void {
 
   // Dark outline.
   ctx.strokeStyle = 'rgba(0,0,0,0.75)';
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.arc(x, y, r - 0.3, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawHole(ctx: CanvasRenderingContext2D, coin: Coin): void {
+  const { x, y } = coin.pos;
+  const r = coin.radius;
+
+  // Outer rim shadow on the felt — soft ellipse below the hole.
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.beginPath();
+  ctx.ellipse(x, y + 1.5, r * 1.02, r * 0.85, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pit body: radial gradient from near-black center to a slightly lighter
+  // rim, so the hole reads as a recessed dark pit rather than a black disc.
+  const pit = ctx.createRadialGradient(x, y - r * 0.1, r * 0.1, x, y, r);
+  pit.addColorStop(0, '#000000');
+  pit.addColorStop(0.7, '#050708');
+  pit.addColorStop(1, '#181c20');
+  ctx.fillStyle = pit;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Subtle bottom-rim highlight — the far inside wall of the depression
+  // catches the light, so the lit crescent sits on the lower half.
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(x, y, r - 0.6, Math.PI * 0.05, Math.PI * 0.95);
+  ctx.stroke();
+
+  // Hard outline so the hole reads against the felt.
+  ctx.strokeStyle = 'rgba(0,0,0,0.85)';
   ctx.lineWidth = 0.9;
   ctx.beginPath();
   ctx.arc(x, y, r - 0.3, 0, Math.PI * 2);
