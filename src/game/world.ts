@@ -2,7 +2,7 @@ import type { Coin } from './coin';
 import type { Table } from './table';
 import { Owner, Phase } from './types';
 
-export type WallBehavior = 'kill' | 'bounce';
+export type WallBehavior = 'kill' | 'bounce' | 'teleport';
 
 export interface Walls {
   top: WallBehavior;

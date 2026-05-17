@@ -155,13 +155,95 @@ export function step(world: World, events?: PhysicsEvents): void {
     }
 
     const p = prev[i]!;
-    if (outTop || outBottom) {
+    // Per-axis intent: bounce, teleport (with virtual target), or none.
+    // Teleport edges are guaranteed to be paired (top↔bottom, left↔right)
+    // by the editor, so a piece emerges on a wall of the same kind.
+    let actionY: 'none' | 'bounce' | 'teleport' = 'none';
+    let actionX: 'none' | 'bounce' | 'teleport' = 'none';
+    let targetY = c.pos.y;
+    let targetX = c.pos.x;
+
+    if (outTop) {
+      if (walls.top === 'teleport') {
+        targetY = c.pos.y + (world.table.height - 2 * r);
+        actionY = 'teleport';
+      } else {
+        actionY = 'bounce';
+      }
+    } else if (outBottom) {
+      if (walls.bottom === 'teleport') {
+        targetY = c.pos.y - (world.table.height - 2 * r);
+        actionY = 'teleport';
+      } else {
+        actionY = 'bounce';
+      }
+    }
+    if (outLeft) {
+      if (walls.left === 'teleport') {
+        targetX = c.pos.x + (world.table.width - 2 * r);
+        actionX = 'teleport';
+      } else {
+        actionX = 'bounce';
+      }
+    } else if (outRight) {
+      if (walls.right === 'teleport') {
+        targetX = c.pos.x - (world.table.width - 2 * r);
+        actionX = 'teleport';
+      } else {
+        actionX = 'bounce';
+      }
+    }
+
+    // Virtual move + collide: if the teleport destination would overlap a
+    // live piece, exchange velocities using the virtual position to pick
+    // the contact normal — but don't actually move anyone. The teleport is
+    // canceled and the teleporter falls back to its pre-step position,
+    // same as a bounce, except the partner gains momentum from the hit.
+    // Holes don't block (they'd swallow on next tick if the teleport
+    // succeeded anyway); trees are static so they reflect the teleporter
+    // off without moving themselves.
+    let teleportBlocked = false;
+    if (actionX === 'teleport' || actionY === 'teleport') {
+      for (const other of coins) {
+        if (other === c) continue;
+        if (!other.alive || other.exploding) continue;
+        if (other.kind === CoinKind.Hole) continue;
+        const dx = targetX - other.pos.x;
+        const dy = targetY - other.pos.y;
+        const rr = r + other.radius + COLLISION_SLACK;
+        if (dx * dx + dy * dy > rr * rr) continue;
+        const savedX = c.pos.x;
+        const savedY = c.pos.y;
+        c.pos.x = targetX;
+        c.pos.y = targetY;
+        if (other.kind === CoinKind.Tree) {
+          resolveStaticCircle(other, c);
+        } else {
+          resolveCollision(c, other);
+        }
+        c.pos.x = savedX;
+        c.pos.y = savedY;
+        teleportBlocked = true;
+      }
+    }
+
+    if (actionY === 'teleport' && !teleportBlocked) {
+      c.pos.y = targetY;
+    } else if (actionY === 'bounce') {
       c.pos.y = p.y;
       c.vel.y = -c.vel.y;
+    } else if (actionY === 'teleport') {
+      // Teleport blocked — velocity already adjusted by the virtual
+      // collision; just keep the piece inside the playable area.
+      c.pos.y = p.y;
     }
-    if (outLeft || outRight) {
+    if (actionX === 'teleport' && !teleportBlocked) {
+      c.pos.x = targetX;
+    } else if (actionX === 'bounce') {
       c.pos.x = p.x;
       c.vel.x = -c.vel.x;
+    } else if (actionX === 'teleport') {
+      c.pos.x = p.x;
     }
   }
 

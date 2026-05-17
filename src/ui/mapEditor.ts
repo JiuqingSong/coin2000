@@ -325,15 +325,40 @@ export function mountMapEditor(parent: HTMLElement, opts: MapEditorOptions): Map
     optKill.value = 'kill';
     const optBounce = document.createElement('option');
     optBounce.value = 'bounce';
-    sel.append(optKill, optBounce);
+    const optTeleport = document.createElement('option');
+    optTeleport.value = 'teleport';
+    sel.append(optKill, optBounce, optTeleport);
     sel.addEventListener('change', () => {
-      mapData.walls[edge] = sel.value as WallBehavior;
+      const oldValue = mapData.walls[edge];
+      const newValue = sel.value as WallBehavior;
+      mapData.walls[edge] = newValue;
+      // Teleport walls must be paired: setting one side to teleport forces
+      // the opposite side to teleport too, and switching a teleport side to
+      // any other behavior drags the partner along. Plain kill↔bounce
+      // changes leave the opposite side untouched.
+      if (newValue === 'teleport' || oldValue === 'teleport') {
+        const opp = oppositeOf(edge);
+        if (mapData.walls[opp] !== newValue) {
+          mapData.walls[opp] = newValue;
+          wallSelectors[opp].value = newValue;
+        }
+      }
     });
     wallRowRefreshers.push(() => {
       optKill.textContent = t('editor.wall.kill');
       optBounce.textContent = t('editor.wall.bounce');
+      optTeleport.textContent = t('editor.wall.teleport');
     });
     return sel;
+  }
+
+  function oppositeOf(edge: WallEdge): WallEdge {
+    switch (edge) {
+      case 'top':    return 'bottom';
+      case 'bottom': return 'top';
+      case 'left':   return 'right';
+      case 'right':  return 'left';
+    }
   }
 
   function appendWallRow(

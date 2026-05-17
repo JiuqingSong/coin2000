@@ -148,6 +148,13 @@ export function drawTable(
     );
   }
 
+  // Teleport walls: glowing violet band with a bright inner streak so they
+  // read as portals rather than solid walls.
+  if (walls.top === 'teleport')    drawTeleportEdge(ctx, table, 'top');
+  if (walls.bottom === 'teleport') drawTeleportEdge(ctx, table, 'bottom');
+  if (walls.left === 'teleport')   drawTeleportEdge(ctx, table, 'left');
+  if (walls.right === 'teleport')  drawTeleportEdge(ctx, table, 'right');
+
   // Kill walls: red danger line just inside the edge.
   ctx.strokeStyle = '#8a3a2e';
   ctx.lineWidth = 2;
@@ -165,6 +172,74 @@ export function drawTable(
     ctx.moveTo(table.width - 1, 0); ctx.lineTo(table.width - 1, table.height);
   }
   ctx.stroke();
+}
+
+function drawTeleportEdge(
+  ctx: CanvasRenderingContext2D,
+  table: Table,
+  edge: 'top' | 'bottom' | 'left' | 'right',
+): void {
+  const T = WALL_THICKNESS;
+  let x: number;
+  let y: number;
+  let w: number;
+  let h: number;
+  let horizontal: boolean;
+  switch (edge) {
+    case 'top':    x = 0;                y = 0;                w = table.width;  h = T;            horizontal = true;  break;
+    case 'bottom': x = 0;                y = table.height - T; w = table.width;  h = T;            horizontal = true;  break;
+    case 'left':   x = 0;                y = 0;                w = T;            h = table.height; horizontal = false; break;
+    case 'right':  x = table.width - T;  y = 0;                w = T;            h = table.height; horizontal = false; break;
+  }
+
+  // Violet base band with a slight gradient across its thin axis so the band
+  // has a sense of depth even at WALL_THICKNESS = 4.
+  const grad = horizontal
+    ? ctx.createLinearGradient(x, y, x, y + h)
+    : ctx.createLinearGradient(x, y, x + w, y);
+  grad.addColorStop(0, '#2a0c4a');
+  grad.addColorStop(0.5, '#8a2be2');
+  grad.addColorStop(1, '#2a0c4a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(x, y, w, h);
+
+  // Bright cyan inner streak — the "active" portal line.
+  ctx.strokeStyle = 'rgba(180, 240, 255, 0.85)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  if (horizontal) {
+    const cy = y + h / 2;
+    ctx.moveTo(x, cy);
+    ctx.lineTo(x + w, cy);
+  } else {
+    const cx = x + w / 2;
+    ctx.moveTo(cx, y);
+    ctx.lineTo(cx, y + h);
+  }
+  ctx.stroke();
+
+  // Soft outer glow drifting onto the felt.
+  const glowGrad = horizontal
+    ? ctx.createLinearGradient(
+        x,
+        edge === 'top' ? y + h : y - 6,
+        x,
+        edge === 'top' ? y + h + 6 : y,
+      )
+    : ctx.createLinearGradient(
+        edge === 'left' ? x + w : x - 6,
+        y,
+        edge === 'left' ? x + w + 6 : x,
+        y,
+      );
+  glowGrad.addColorStop(edge === 'top' || edge === 'left' ? 0 : 1, 'rgba(160, 90, 255, 0.32)');
+  glowGrad.addColorStop(edge === 'top' || edge === 'left' ? 1 : 0, 'rgba(160, 90, 255, 0)');
+  ctx.fillStyle = glowGrad;
+  if (horizontal) {
+    ctx.fillRect(x, edge === 'top' ? y + h : y - 6, w, 6);
+  } else {
+    ctx.fillRect(edge === 'left' ? x + w : x - 6, y, 6, h);
+  }
 }
 
 function drawBounceEdgeAccent(
