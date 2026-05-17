@@ -125,7 +125,11 @@ export class Engine {
     }
     this.opts.onFrame?.(this.world);
     const hoverId = this.world.phase === Phase.Aiming ? this.opts.aim.hover : null;
-    draw(this.opts.view, this.world, this.opts.aim.preview, hoverId);
+    const preview =
+      this.world.phase === Phase.Aiming
+        ? this.players[this.world.current].getPreview?.() ?? null
+        : null;
+    draw(this.opts.view, this.world, preview, hoverId);
     requestAnimationFrame(this.tick);
   };
 

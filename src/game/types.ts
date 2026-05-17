@@ -11,6 +11,7 @@ export const enum CoinKind {
   Stone = 'stone',
   Bomb = 'bomb',
   Tree = 'tree',
+  Hole = 'hole',
 }
 
 export type CoinId = number;

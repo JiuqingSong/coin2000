@@ -1,8 +1,9 @@
 import { Owner } from '../game/types';
 import type { World } from '../game/world';
-import { AI_THINK_MS } from '../game/constants';
+import type { AimPreview } from '../input/aim';
 import type { Player, ShotCallback } from './player';
 import type { ShotRecord } from '../replay/types';
+import { ScriptedAim } from './scriptedAim';
 
 export interface ReplayQueue {
   next(): ShotRecord | undefined;
@@ -18,26 +19,24 @@ export function createReplayQueue(shots: readonly ShotRecord[]): ReplayQueue {
 }
 
 export class ReplayPlayer implements Player {
-  private pending: ReturnType<typeof setTimeout> | null = null;
+  private aimer = new ScriptedAim();
 
   constructor(
     readonly owner: Owner.P1 | Owner.P2,
     private readonly queue: ReplayQueue,
   ) {}
 
-  startTurn(_world: World, onShoot: ShotCallback): void {
+  startTurn(world: World, onShoot: ShotCallback): void {
     const shot = this.queue.next();
     if (!shot || shot.shooter !== this.owner) return;
-    this.pending = setTimeout(() => {
-      this.pending = null;
-      onShoot(shot.coinId, shot.vel);
-    }, AI_THINK_MS);
+    this.aimer.start(world, shot.coinId, shot.vel, onShoot);
   }
 
   cancelTurn(): void {
-    if (this.pending !== null) {
-      clearTimeout(this.pending);
-      this.pending = null;
-    }
+    this.aimer.cancel();
+  }
+
+  getPreview(): AimPreview | null {
+    return this.aimer.getPreview();
   }
 }

@@ -1,6 +1,6 @@
 import type { World } from '../game/world';
 import type { AimPreview } from '../input/aim';
-import type { CoinId } from '../game/types';
+import { CoinKind, type CoinId } from '../game/types';
 import type { CanvasView } from './canvas';
 import { config } from '../game/config';
 import { drawPiece, drawTable } from './sprites';
@@ -18,7 +18,13 @@ export function draw(
   view.applyTableTransform(world.table);
   drawTable(view.ctx, world.table, world.walls);
   const activeId = aim?.coinId ?? null;
+  // Holes are drawn first so dropping pieces shrink visually on top of them.
   for (const coin of world.coins) {
+    if (coin.kind !== CoinKind.Hole) continue;
+    drawPiece(view.ctx, coin, false, false);
+  }
+  for (const coin of world.coins) {
+    if (coin.kind === CoinKind.Hole) continue;
     const isActive = coin.id === activeId;
     const isHovered = !isActive && coin.id === hoverId;
     drawPiece(view.ctx, coin, isActive, isHovered);
@@ -28,6 +34,10 @@ export function draw(
 
 function drawAim(ctx: CanvasRenderingContext2D, aim: AimPreview): void {
   const length = aim.power * config.maxShotSpeed * 6;
+  // Below ~1px the arrowhead would draw as a degenerate triangle on top of the
+  // coin. Skip drawing entirely so the AI's "highlight only" phase reads as
+  // just the chosen-coin glow.
+  if (length < 1) return;
   const x2 = aim.from.x + aim.dir.x * length;
   const y2 = aim.from.y + aim.dir.y * length;
 
