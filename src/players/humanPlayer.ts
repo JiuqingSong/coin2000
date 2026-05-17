@@ -1,6 +1,6 @@
 import type { Owner } from '../game/types';
 import type { World } from '../game/world';
-import type { AimController } from '../input/aim';
+import type { AimController, AimPreview } from '../input/aim';
 import type { Player, ShotCallback } from './player';
 
 export class HumanPlayer implements Player {
@@ -15,5 +15,9 @@ export class HumanPlayer implements Player {
 
   cancelTurn(): void {
     this.aim.stop();
+  }
+
+  getPreview(): AimPreview | null {
+    return this.aim.preview;
   }
 }

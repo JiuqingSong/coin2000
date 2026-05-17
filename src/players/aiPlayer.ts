@@ -1,27 +1,26 @@
 import type { Owner } from '../game/types';
 import type { World } from '../game/world';
-import { AI_THINK_MS } from '../game/constants';
+import type { AimPreview } from '../input/aim';
 import { chooseShot } from '../ai/cpu';
 import type { Player, ShotCallback } from './player';
+import { ScriptedAim } from './scriptedAim';
 
 export class AIPlayer implements Player {
-  private pending: ReturnType<typeof setTimeout> | null = null;
+  private aimer = new ScriptedAim();
 
   constructor(readonly owner: Owner) {}
 
   startTurn(world: World, onShoot: ShotCallback): void {
     const shot = chooseShot(world);
     if (!shot) return;
-    this.pending = setTimeout(() => {
-      this.pending = null;
-      onShoot(shot.coinId, shot.vel);
-    }, AI_THINK_MS);
+    this.aimer.start(world, shot.coinId, shot.vel, onShoot);
   }
 
   cancelTurn(): void {
-    if (this.pending !== null) {
-      clearTimeout(this.pending);
-      this.pending = null;
-    }
+    this.aimer.cancel();
+  }
+
+  getPreview(): AimPreview | null {
+    return this.aimer.getPreview();
   }
 }

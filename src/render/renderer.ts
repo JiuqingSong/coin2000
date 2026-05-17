@@ -34,6 +34,10 @@ export function draw(
 
 function drawAim(ctx: CanvasRenderingContext2D, aim: AimPreview): void {
   const length = aim.power * config.maxShotSpeed * 6;
+  // Below ~1px the arrowhead would draw as a degenerate triangle on top of the
+  // coin. Skip drawing entirely so the AI's "highlight only" phase reads as
+  // just the chosen-coin glow.
+  if (length < 1) return;
   const x2 = aim.from.x + aim.dir.x * length;
   const y2 = aim.from.y + aim.dir.y * length;
 
