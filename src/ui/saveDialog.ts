@@ -2,6 +2,9 @@ import { subscribeLocale, t } from '../i18n';
 
 export interface SaveDialogOptions {
   defaultName: string;
+  // Trailing extension (e.g. ".map.coin"). When opening, everything before
+  // this suffix is selected so the user edits just the basename.
+  extension?: string;
   onSave(name: string): void;
   onCancel?(): void;
 }
@@ -94,9 +97,16 @@ export function mountSaveDialog(parent: HTMLElement): SaveDialogHandle {
       overlay.hidden = false;
       requestAnimationFrame(() => {
         input.focus();
-        // Select the name part (before the .json extension) for easy renaming.
-        const dot = input.value.lastIndexOf('.');
-        if (dot > 0) input.setSelectionRange(0, dot);
+        // Select the basename so the user can rename without deleting the
+        // extension. Caller-supplied ext wins over the naive last-dot rule
+        // because our extensions are compound (".map.coin", ".replay.coin").
+        const v = input.value;
+        const ext = opts.extension;
+        const end =
+          ext && v.toLowerCase().endsWith(ext.toLowerCase())
+            ? v.length - ext.length
+            : v.lastIndexOf('.');
+        if (end > 0) input.setSelectionRange(0, end);
         else input.select();
       });
     },

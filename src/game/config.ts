@@ -46,7 +46,7 @@ export const CONFIG_RANGES = {
   explosionRadius: { min: 15, max: 100 },
 } as const;
 
-const STORAGE_KEY = 'coin2000.config.v1';
+const STORAGE_KEY = 'coin2026.config.v1';
 
 export const config: GameConfig = { ...CONFIG_DEFAULTS };
 

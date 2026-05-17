@@ -16,12 +16,17 @@ export interface ChromeOptions {
   onMapChange(mapId: MapId): void;
   onRestart(): void;
   onMusicToggle(): void;
+  onBackToEditor(): void;
 }
 
 export interface ChromeHandle {
   setMusicOn(on: boolean): void;
   setReplayMode(on: boolean): void;
+  setCustomMapActive(on: boolean): void;
+  setEditingMode(on: boolean): void;
 }
+
+const CUSTOM_MAP_OPTION = '__custom__';
 
 export function mountChrome(root: HTMLElement, opts: ChromeOptions): ChromeHandle {
   let p2Mode = opts.initialP2Mode;
@@ -29,6 +34,8 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): ChromeHandl
   let musicBtnEl: HTMLButtonElement | null = null;
   let controlsEl: HTMLElement | null = null;
   let replayMode = false;
+  let customMapActive = false;
+  let editingMode = false;
 
   const refreshMusicBtn = () => {
     if (!musicBtnEl) return;
@@ -70,14 +77,21 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): ChromeHandl
     const mapLabel = document.createElement('label');
     mapLabel.append(t('chrome.map'));
     const mapSelect = document.createElement('select');
+    if (customMapActive) {
+      const o = document.createElement('option');
+      o.value = CUSTOM_MAP_OPTION;
+      o.textContent = t('welcome.map.custom');
+      mapSelect.append(o);
+    }
     for (const m of MAPS) {
       const o = document.createElement('option');
       o.value = m.id;
       o.textContent = t(m.nameKey);
       mapSelect.append(o);
     }
-    mapSelect.value = getSelectedMapId();
+    mapSelect.value = customMapActive ? CUSTOM_MAP_OPTION : getSelectedMapId();
     mapSelect.addEventListener('change', () => {
+      if (mapSelect.value === CUSTOM_MAP_OPTION) return; // already on custom
       const id = mapSelect.value as MapId;
       setSelectedMapId(id);
       opts.onMapChange(id);
@@ -88,6 +102,11 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): ChromeHandl
     restart.type = 'button';
     restart.textContent = t('chrome.restart');
     restart.addEventListener('click', opts.onRestart);
+
+    const backToEditor = document.createElement('button');
+    backToEditor.type = 'button';
+    backToEditor.textContent = t('chrome.backToEditor');
+    backToEditor.addEventListener('click', opts.onBackToEditor);
 
     const musicBtn = document.createElement('button');
     musicBtn.type = 'button';
@@ -104,7 +123,9 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): ChromeHandl
     langBtn.setAttribute('aria-label', t('chrome.lang.toggle.title'));
     langBtn.addEventListener('click', toggleLocale);
 
-    controls.append(p2Label, mapLabel, restart, musicBtn, langBtn);
+    controls.append(p2Label, mapLabel, restart);
+    if (editingMode) controls.append(backToEditor);
+    controls.append(musicBtn, langBtn);
     controlsEl = controls;
     controls.hidden = replayMode;
     root.append(title, controls);
@@ -122,6 +143,16 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): ChromeHandl
     setReplayMode(on: boolean) {
       replayMode = on;
       if (controlsEl) controlsEl.hidden = on;
+    },
+    setCustomMapActive(on: boolean) {
+      if (customMapActive === on) return;
+      customMapActive = on;
+      render();
+    },
+    setEditingMode(on: boolean) {
+      if (editingMode === on) return;
+      editingMode = on;
+      render();
     },
   };
 }

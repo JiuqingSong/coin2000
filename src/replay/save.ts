@@ -1,5 +1,7 @@
 import type { SaveFile } from './types';
 
+export const REPLAY_FILE_EXT = '.replay.coin';
+
 export function serializeSaveFile(file: SaveFile): string {
   return JSON.stringify(file, null, 2);
 }
@@ -12,13 +14,15 @@ export function defaultSaveFileName(date: Date = new Date()): string {
   const hh = pad(date.getHours());
   const mm = pad(date.getMinutes());
   const ss = pad(date.getSeconds());
-  return `coin2000-replay-${y}-${m}-${d}-${hh}${mm}${ss}.json`;
+  return `coin2026-replay-${y}-${m}-${d}-${hh}${mm}${ss}${REPLAY_FILE_EXT}`;
 }
 
-export function sanitizeFileName(raw: string): string {
+// Strip illegal filename characters and force the desired extension.
+// Default is REPLAY_FILE_EXT for backwards compatibility with existing callers.
+export function sanitizeFileName(raw: string, ext: string = REPLAY_FILE_EXT): string {
   let name = raw.trim().replace(/[\\/:*?"<>|]/g, '_');
-  if (!name) name = defaultSaveFileName();
-  if (!/\.json$/i.test(name)) name += '.json';
+  if (!name) name = 'untitled';
+  if (!name.toLowerCase().endsWith(ext.toLowerCase())) name += ext;
   return name;
 }
 

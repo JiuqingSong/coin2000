@@ -3,6 +3,8 @@ import { Music } from './audio/music';
 import { Engine } from './game/engine';
 import { Owner } from './game/types';
 import { applyConfig, config, loadConfig, subscribeConfig, type GameConfig } from './game/config';
+import { materializeSelectedMap } from './game/setup';
+import type { MapData } from './game/mapData';
 import { applyDocumentLocale } from './i18n';
 import { AimController } from './input/aim';
 import { AIPlayer } from './players/aiPlayer';
@@ -13,6 +15,7 @@ import { createCanvasView } from './render/canvas';
 import { mountChrome, type P2Mode } from './ui/chrome';
 import { mountConfig } from './ui/config';
 import { mountHud } from './ui/hud';
+import { mountMapEditor, type MapEditorHandle } from './ui/mapEditor';
 import { mountReactions } from './ui/reactions';
 import { mountSaveDialog } from './ui/saveDialog';
 import { mountWelcome, type WelcomeHandle } from './ui/welcome';
@@ -23,11 +26,19 @@ import {
   type ShotRecord,
 } from './replay/types';
 import {
+  REPLAY_FILE_EXT,
   defaultSaveFileName,
   downloadAsFile,
   sanitizeFileName,
   serializeSaveFile,
 } from './replay/save';
+import {
+  MAP_FILE_APP,
+  MAP_FILE_KIND,
+  MAP_FILE_VERSION,
+  type MapFile,
+} from './editor/types';
+import { MAP_FILE_EXT, defaultMapFileName, serializeMapFile } from './editor/save';
 import type { RoundResult } from './game/rules';
 
 const board = document.getElementById('board') as HTMLCanvasElement | null;
@@ -69,6 +80,11 @@ let recordedShots: ShotRecord[] = [];
 let lastResult: RoundResult | null = null;
 let preReplayConfig: GameConfig | null = null;
 let welcome: WelcomeHandle | null = null;
+let editor: MapEditorHandle | null = null;
+let customMap: MapData | null = null;
+// Last map the editor handed off to a Test Play. Lets the "Back to Editor"
+// button in chrome re-open the editor with the same in-progress design.
+let editingMap: MapData | null = null;
 
 const buildPlayer = (owner: Owner): Player => {
   if (gameMode === 'replay' && replayQueue) {
@@ -87,7 +103,11 @@ const restart = () => {
   reactions.clear();
   recordedShots = [];
   lastResult = null;
-  engine.start();
+  if (customMap !== null) {
+    engine.startWithMap(customMap);
+  } else {
+    engine.start();
+  }
   music.start();
 };
 
@@ -151,9 +171,30 @@ const chrome = mountChrome(chromeEl, {
     hud.setP2Mode(mode);
     engine.setPlayer(Owner.P2, buildPlayer(Owner.P2));
   },
-  onMapChange: () => restart(),
+  onMapChange: () => {
+    // Picking a built-in template exits custom-map mode (and any editor test).
+    if (customMap !== null) {
+      customMap = null;
+      chrome.setCustomMapActive(false);
+    }
+    if (editingMap !== null) {
+      editingMap = null;
+      chrome.setEditingMode(false);
+    }
+    restart();
+  },
   onRestart: restart,
   onMusicToggle: () => music.toggle(),
+  onBackToEditor: () => {
+    if (editingMap === null) return;
+    engine.stop();
+    customMap = null;
+    chrome.setCustomMapActive(false);
+    chrome.setEditingMode(false);
+    hud.clearResult();
+    reactions.clear();
+    openEditor(editingMap);
+  },
 });
 music.subscribe((on) => chrome.setMusicOn(on));
 
@@ -164,6 +205,14 @@ const welcomeOpts = {
   onStart: () => {
     welcome?.hide();
     welcome = null;
+    if (customMap !== null) {
+      customMap = null;
+      chrome.setCustomMapActive(false);
+    }
+    if (editingMap !== null) {
+      editingMap = null;
+      chrome.setEditingMode(false);
+    }
     recordedShots = [];
     lastResult = null;
     engine.start();
@@ -175,11 +224,70 @@ const welcomeOpts = {
     welcome = null;
     startReplay(save);
   },
+  onLoadMap: (file: MapFile) => {
+    welcome?.hide();
+    welcome = null;
+    startCustomMap(file.map);
+  },
+  onEditMap: () => {
+    welcome?.hide();
+    welcome = null;
+    editingMap = null;
+    openEditor(materializeSelectedMap());
+  },
 };
 
 const showWelcome = () => {
   if (welcome) return;
   welcome = mountWelcome(document.body, welcomeOpts);
+};
+
+const startCustomMap = (map: MapData) => {
+  customMap = map;
+  chrome.setCustomMapActive(true);
+  hud.clearResult();
+  reactions.clear();
+  recordedShots = [];
+  lastResult = null;
+  engine.startWithMap(map);
+  music.start();
+};
+
+const openEditor = (initialMap: MapData) => {
+  editor?.hide();
+  editor = mountMapEditor(document.body, {
+    initialMap,
+    onSaveMap: (map) => {
+      const filename = defaultMapFileName();
+      const file: MapFile = {
+        app: MAP_FILE_APP,
+        version: MAP_FILE_VERSION,
+        kind: MAP_FILE_KIND,
+        createdAt: new Date().toISOString(),
+        map,
+      };
+      saveDialog.open({
+        defaultName: filename,
+        extension: MAP_FILE_EXT,
+        onSave: (name) => {
+          downloadAsFile(sanitizeFileName(name, MAP_FILE_EXT), serializeMapFile(file));
+        },
+      });
+    },
+    onTestMap: (map) => {
+      editor?.hide();
+      editor = null;
+      editingMap = map;
+      chrome.setEditingMode(true);
+      startCustomMap(map);
+    },
+    onClose: () => {
+      editor?.hide();
+      editor = null;
+      editingMap = null;
+      showWelcome();
+    },
+  });
 };
 
 const startReplay = (save: SaveFile) => {
@@ -218,6 +326,7 @@ const openSaveDialog = () => {
   const shots = recordedShots.slice();
   saveDialog.open({
     defaultName: defaultSaveFileName(),
+    extension: REPLAY_FILE_EXT,
     onSave: (name) => {
       const file: SaveFile = {
         app: SAVE_FILE_APP,
@@ -229,7 +338,7 @@ const openSaveDialog = () => {
         shots,
         result,
       };
-      downloadAsFile(sanitizeFileName(name), serializeSaveFile(file));
+      downloadAsFile(sanitizeFileName(name, REPLAY_FILE_EXT), serializeSaveFile(file));
     },
   });
 };

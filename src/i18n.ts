@@ -2,7 +2,7 @@ export type Locale = 'zh' | 'en' | 'ja';
 
 const LOCALE_CYCLE: readonly Locale[] = ['zh', 'en', 'ja'];
 
-const STORAGE_KEY = 'coin2000.locale.v1';
+const STORAGE_KEY = 'coin2026.locale.v1';
 
 type Listener = (locale: Locale) => void;
 const listeners = new Set<Listener>();
@@ -77,7 +77,7 @@ type StringDict = Record<StringKey, string>;
 type ArrayDict = Record<ArrayKey, readonly string[]>;
 
 const ZH_STRINGS = {
-  'app.title': 'COIN 2000 · 弹硬币',
+  'app.title': 'COIN 2026 · 弹硬币',
 
   // chrome (top bar)
   'chrome.opponent': '对手',
@@ -85,6 +85,7 @@ const ZH_STRINGS = {
   'chrome.p2.human': '玩家',
   'chrome.map': '地图',
   'chrome.restart': '重新开始',
+  'chrome.backToEditor': '返回编辑器',
   'chrome.music.on': '♪ 音乐',
   'chrome.music.off': '🔇 音乐',
   'chrome.music.title.on': '关闭背景音乐',
@@ -93,7 +94,7 @@ const ZH_STRINGS = {
   'chrome.lang.toggle.title': 'Switch to English',
 
   // welcome screen
-  'welcome.titlebar': 'Song Studio<sup>®</sup> 系列产品',
+  'welcome.titlebar': 'Yesoft 系列产品',
   'welcome.tool.guide': '说明',
   'welcome.tool.settings': '设置',
   'welcome.tool.about': '关于',
@@ -101,12 +102,15 @@ const ZH_STRINGS = {
   'welcome.signature': '作者: Songthin',
   'welcome.action.start': '开始',
   'welcome.action.replay': '放录相',
+  'welcome.action.editor': '编辑地图',
+  'welcome.action.loadMap': '载入地图',
   'welcome.map.heading': '地图',
-  'welcome.footer': '本游戏完全免费，欢迎拷贝。 2000年10月 V2.61',
+  'welcome.map.custom': '自制',
+  'welcome.footer': '本游戏完全免费，欢迎拷贝。 2026年5月',
   'welcome.modal.back': '返回',
   'welcome.about.title': '关于',
   'welcome.about.body':
-    'COIN 2000  版本 2.61\n作者: Songthin\n版权所有 © 1995-2000 Song Studio\n\n浏览器移植版 · 2026',
+    'COIN 2026\n作者: Songthin\nYesoft\n\n浏览器移植版 · 2026',
   'welcome.replay.title': '放录相',
   'welcome.replay.body': '暂未实现。',
   'welcome.guide.title': '游戏说明',
@@ -200,16 +204,55 @@ const ZH_STRINGS = {
   'save.error.title': '无法读取录像',
   'save.error.badJson': '文件内容不是有效的 JSON。',
   'save.error.badShape': '文件结构不正确。',
-  'save.error.wrongApp': '这不是 COIN 2000 的录像文件。',
+  'save.error.wrongApp': '这不是 COIN 2026 的录像文件。',
+  'save.error.wrongKind': '请选择 .replay.coin 录像文件。',
   'save.error.wrongVersion': '该录像版本不被支持。',
   'save.error.badMap': '录像中的地图信息缺失或损坏。',
   'save.error.badConfig': '录像中的设置信息缺失或损坏。',
   'save.error.badShots': '录像中的出手记录缺失或损坏。',
   'save.error.badResult': '录像中的胜负信息缺失或损坏。',
+
+  // map file errors
+  'mapfile.error.title': '无法读取地图',
+  'mapfile.error.badJson': '文件内容不是有效的 JSON。',
+  'mapfile.error.badShape': '文件结构不正确。',
+  'mapfile.error.wrongApp': '这不是 COIN 2026 的地图文件。',
+  'mapfile.error.wrongKind': '这是录像文件，不是地图文件。',
+  'mapfile.error.wrongVersion': '该地图版本不被支持。',
+  'mapfile.error.badMap': '地图数据缺失或损坏。',
+
+  // map editor
+  'editor.title': '地图编辑器',
+  'editor.section.walls': '边界',
+  'editor.wall.top': '上边',
+  'editor.wall.bottom': '下边',
+  'editor.wall.left': '左边',
+  'editor.wall.right': '右边',
+  'editor.wall.kill': '出界 (死)',
+  'editor.wall.bounce': '反弹',
+  'editor.section.tools': '工具',
+  'editor.tool.select': '选择 / 移动',
+  'editor.tool.p1': '玩家硬币',
+  'editor.tool.p2': '电脑硬币',
+  'editor.tool.stone': '石头',
+  'editor.tool.bomb': '炸弹',
+  'editor.tool.tree': '树木',
+  'editor.tool.erase': '删除',
+  'editor.section.actions': '操作',
+  'editor.btn.clear': '清空',
+  'editor.btn.save': '保存',
+  'editor.btn.test': '试玩',
+  'editor.btn.close': '关闭',
+  'editor.hint.select': '点击选择棋子，拖动移动，Delete 键删除。',
+  'editor.hint.place': '点击空白处放置棋子。',
+  'editor.hint.erase': '点击棋子将其删除。',
+  'editor.error.noP1': '至少需要 1 颗玩家硬币。',
+  'editor.error.noP2': '至少需要 1 颗对手硬币。',
+  'editor.error.overlap': '有棋子重叠，请调整位置。',
 } as const;
 
 const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
-  'app.title': 'COIN 2000 · Coin Flick',
+  'app.title': 'COIN 2026 · Coin Flick',
 
   // chrome (top bar)
   'chrome.opponent': 'Opponent',
@@ -217,6 +260,7 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'chrome.p2.human': 'Human',
   'chrome.map': 'Map',
   'chrome.restart': 'Restart',
+  'chrome.backToEditor': 'Back to Editor',
   'chrome.music.on': '♪ Music',
   'chrome.music.off': '🔇 Music',
   'chrome.music.title.on': 'Turn music off',
@@ -225,7 +269,7 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'chrome.lang.toggle.title': '日本語に切り替え',
 
   // welcome screen
-  'welcome.titlebar': 'A Song Studio<sup>®</sup> Production',
+  'welcome.titlebar': 'A Yesoft Production',
   'welcome.tool.guide': 'Guide',
   'welcome.tool.settings': 'Settings',
   'welcome.tool.about': 'About',
@@ -233,12 +277,15 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'welcome.signature': 'By Songthin',
   'welcome.action.start': 'Start',
   'welcome.action.replay': 'Replay',
+  'welcome.action.editor': 'Map Editor',
+  'welcome.action.loadMap': 'Load Map',
   'welcome.map.heading': 'Map',
-  'welcome.footer': 'Freeware — please share. October 2000, V2.61',
+  'welcome.map.custom': 'Custom',
+  'welcome.footer': 'Freeware — please share. May 2026',
   'welcome.modal.back': 'Back',
   'welcome.about.title': 'About',
   'welcome.about.body':
-    'COIN 2000  Version 2.61\nBy Songthin\nCopyright © 1995-2000 Song Studio\n\nBrowser port · 2026',
+    'COIN 2026\nBy Songthin\nYesoft\n\nBrowser port · 2026',
   'welcome.replay.title': 'Replay',
   'welcome.replay.body': 'Not implemented yet.',
   'welcome.guide.title': 'How to Play',
@@ -332,16 +379,55 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'save.error.title': 'Could not load replay',
   'save.error.badJson': 'The file is not valid JSON.',
   'save.error.badShape': 'The file structure is unexpected.',
-  'save.error.wrongApp': 'This is not a COIN 2000 replay file.',
+  'save.error.wrongApp': 'This is not a COIN 2026 replay file.',
+  'save.error.wrongKind': 'Please select a .replay.coin file.',
   'save.error.wrongVersion': 'This replay version is not supported.',
   'save.error.badMap': 'The map data in the replay is missing or damaged.',
   'save.error.badConfig': 'The settings data in the replay is missing or damaged.',
   'save.error.badShots': 'The shot list in the replay is missing or damaged.',
   'save.error.badResult': 'The result data in the replay is missing or damaged.',
+
+  // map file errors
+  'mapfile.error.title': 'Could not load map',
+  'mapfile.error.badJson': 'The file is not valid JSON.',
+  'mapfile.error.badShape': 'The file structure is unexpected.',
+  'mapfile.error.wrongApp': 'This is not a COIN 2026 map file.',
+  'mapfile.error.wrongKind': 'This is a replay file, not a map file.',
+  'mapfile.error.wrongVersion': 'This map version is not supported.',
+  'mapfile.error.badMap': 'The map data is missing or damaged.',
+
+  // map editor
+  'editor.title': 'Map Editor',
+  'editor.section.walls': 'Walls',
+  'editor.wall.top': 'Top',
+  'editor.wall.bottom': 'Bottom',
+  'editor.wall.left': 'Left',
+  'editor.wall.right': 'Right',
+  'editor.wall.kill': 'Kill',
+  'editor.wall.bounce': 'Bounce',
+  'editor.section.tools': 'Tools',
+  'editor.tool.select': 'Select / Move',
+  'editor.tool.p1': 'Player coin',
+  'editor.tool.p2': 'Opponent coin',
+  'editor.tool.stone': 'Stone',
+  'editor.tool.bomb': 'Bomb',
+  'editor.tool.tree': 'Tree',
+  'editor.tool.erase': 'Erase',
+  'editor.section.actions': 'Actions',
+  'editor.btn.clear': 'Clear',
+  'editor.btn.save': 'Save',
+  'editor.btn.test': 'Test Play',
+  'editor.btn.close': 'Close',
+  'editor.hint.select': 'Click a piece to select, drag to move, Delete to remove.',
+  'editor.hint.place': 'Click empty space to place a piece.',
+  'editor.hint.erase': 'Click a piece to delete it.',
+  'editor.error.noP1': 'At least 1 player coin is required.',
+  'editor.error.noP2': 'At least 1 opponent coin is required.',
+  'editor.error.overlap': 'Pieces overlap — move them apart.',
 };
 
 const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
-  'app.title': 'COIN 2000 · コイン弾き',
+  'app.title': 'COIN 2026 · コイン弾き',
 
   // chrome (top bar)
   'chrome.opponent': '対戦相手',
@@ -349,6 +435,7 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'chrome.p2.human': '対戦',
   'chrome.map': 'マップ',
   'chrome.restart': '再スタート',
+  'chrome.backToEditor': 'エディタへ戻る',
   'chrome.music.on': '♪ 音楽',
   'chrome.music.off': '🔇 音楽',
   'chrome.music.title.on': 'BGMをオフ',
@@ -357,7 +444,7 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'chrome.lang.toggle.title': '切换到中文',
 
   // welcome screen
-  'welcome.titlebar': 'Song Studio<sup>®</sup> シリーズ',
+  'welcome.titlebar': 'Yesoft シリーズ',
   'welcome.tool.guide': '遊び方',
   'welcome.tool.settings': '設定',
   'welcome.tool.about': '情報',
@@ -365,12 +452,15 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'welcome.signature': '作者: Songthin',
   'welcome.action.start': '開始',
   'welcome.action.replay': 'リプレイ',
+  'welcome.action.editor': 'マップ編集',
+  'welcome.action.loadMap': 'マップを開く',
   'welcome.map.heading': 'マップ',
-  'welcome.footer': 'フリーソフトウェア、配布歓迎。 2000年10月 V2.61',
+  'welcome.map.custom': 'カスタム',
+  'welcome.footer': 'フリーソフトウェア、配布歓迎。 2026年5月',
   'welcome.modal.back': '戻る',
   'welcome.about.title': '情報',
   'welcome.about.body':
-    'COIN 2000  バージョン 2.61\n作者: Songthin\nCopyright © 1995-2000 Song Studio\n\nブラウザ移植版 · 2026',
+    'COIN 2026  バージョン\n作者: Songthin\nYesoft\n\nブラウザ移植版 · 2026',
   'welcome.replay.title': 'リプレイ',
   'welcome.replay.body': '未実装です。',
   'welcome.guide.title': '遊び方',
@@ -464,12 +554,51 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'save.error.title': 'リプレイを読み込めません',
   'save.error.badJson': 'ファイルが有効な JSON ではありません。',
   'save.error.badShape': 'ファイル構造が想定外です。',
-  'save.error.wrongApp': 'COIN 2000 のリプレイファイルではありません。',
+  'save.error.wrongApp': 'COIN 2026 のリプレイファイルではありません。',
+  'save.error.wrongKind': '.replay.coin のリプレイファイルを選択してください。',
   'save.error.wrongVersion': 'このリプレイのバージョンには対応していません。',
   'save.error.badMap': 'リプレイのマップ情報が欠落しているか壊れています。',
   'save.error.badConfig': 'リプレイの設定情報が欠落しているか壊れています。',
   'save.error.badShots': 'リプレイのショット記録が欠落しているか壊れています。',
   'save.error.badResult': 'リプレイの結果情報が欠落しているか壊れています。',
+
+  // map file errors
+  'mapfile.error.title': 'マップを読み込めません',
+  'mapfile.error.badJson': 'ファイルが有効な JSON ではありません。',
+  'mapfile.error.badShape': 'ファイル構造が想定外です。',
+  'mapfile.error.wrongApp': 'COIN 2026 のマップファイルではありません。',
+  'mapfile.error.wrongKind': 'これはリプレイで、マップではありません。',
+  'mapfile.error.wrongVersion': 'このマップのバージョンには対応していません。',
+  'mapfile.error.badMap': 'マップデータが欠落しているか壊れています。',
+
+  // map editor
+  'editor.title': 'マップエディタ',
+  'editor.section.walls': '壁',
+  'editor.wall.top': '上',
+  'editor.wall.bottom': '下',
+  'editor.wall.left': '左',
+  'editor.wall.right': '右',
+  'editor.wall.kill': '落下',
+  'editor.wall.bounce': '反射',
+  'editor.section.tools': 'ツール',
+  'editor.tool.select': '選択 / 移動',
+  'editor.tool.p1': 'プレイヤーコイン',
+  'editor.tool.p2': '相手コイン',
+  'editor.tool.stone': '石',
+  'editor.tool.bomb': '爆弾',
+  'editor.tool.tree': '木',
+  'editor.tool.erase': '削除',
+  'editor.section.actions': '操作',
+  'editor.btn.clear': 'クリア',
+  'editor.btn.save': '保存',
+  'editor.btn.test': '試遊',
+  'editor.btn.close': '閉じる',
+  'editor.hint.select': '駒をクリックで選択、ドラッグで移動、Delete で削除。',
+  'editor.hint.place': '空いた場所をクリックで駒を配置。',
+  'editor.hint.erase': '駒をクリックで削除。',
+  'editor.error.noP1': 'プレイヤーコインが最低 1 つ必要です。',
+  'editor.error.noP2': '相手コインが最低 1 つ必要です。',
+  'editor.error.overlap': '駒が重なっています。位置を調整してください。',
 };
 
 export type StringKey = keyof typeof ZH_STRINGS;

@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'coin2000.music.v1';
+const STORAGE_KEY = 'coin2026.music.v1';
 const TRACK_URL = './mp3/coin flicker theme.mp3';
 
 type Listener = (enabled: boolean) => void;

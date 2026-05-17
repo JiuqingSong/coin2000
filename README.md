@@ -1,8 +1,8 @@
-# COIN 2000
+# COIN 2026
 
-A browser port of the 1995 Turbo Pascal game **COIN 2000** (Song Studio / Song Jiuqing). Two players take turns flicking coins across a table — knock the other side's coins off the top or bottom edge to win.
+A browser port of the 1995 Turbo Pascal game **COIN 2026** (Yesoft / Song Jiuqing). Two players take turns flicking coins across a table — knock the other side's coins off the top or bottom edge to win.
 
-Play it: <https://jiuqingsong.github.io/coin2000/>
+Play it: <https://jiuqingsong.github.io/coin2026/>
 
 ## Controls
 
@@ -33,7 +33,7 @@ Pushes to `main` deploy automatically to GitHub Pages via `.github/workflows/pag
 
 ## About the port
 
-The original COIN 2000 was a Turbo Pascal program built around a custom `GraphObj` / `GraphDlg` / `GraphMnu` windowing framework that made up roughly 70% of the source. The port skips that framework entirely — chrome and HUD are native HTML/CSS, only the playfield is canvas — and reimplements just the gameplay: coin physics, the table, the bell, and the AI.
+The original COIN 2026 was a Turbo Pascal program built around a custom `GraphObj` / `GraphDlg` / `GraphMnu` windowing framework that made up roughly 70% of the source. The port skips that framework entirely — chrome and HUD are native HTML/CSS, only the playfield is canvas — and reimplements just the gameplay: coin physics, the table, the bell, and the AI.
 
 Physics constants (friction μ = 0.015, gravity g = 9.8, collision restitution 0.95, max shot speed 14, coin radius 11, coin mass 5) are taken directly from `legacy/COINUSE.PAS`. Collision math is a 1D-elastic-on-rotated-frame port of the original `hit()` procedure. The AI is a simplified port of `cgetv` that samples five angles per (own-coin, enemy-coin) pair and picks the highest-scoring shot via headless physics simulation.
 

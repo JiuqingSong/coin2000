@@ -8,11 +8,15 @@ import {
 } from '../game/maps';
 import { parseSaveFile, SaveFileParseError, type SaveFileErrorReason } from '../replay/load';
 import type { SaveFile } from '../replay/types';
+import { MapFileParseError, parseMapFile, type MapFileErrorReason } from '../editor/load';
+import type { MapFile } from '../editor/types';
 
 export interface WelcomeOptions {
   onStart(): void;
   onSettings(): void;
   onLoadReplay(save: SaveFile): void;
+  onLoadMap(file: MapFile): void;
+  onEditMap(): void;
 }
 
 export interface WelcomeHandle {
@@ -42,6 +46,15 @@ const LOAD_ERROR_BODY_KEY: Record<SaveFileErrorReason, StringKey> = {
   badConfig: 'save.error.badConfig',
   badShots: 'save.error.badShots',
   badResult: 'save.error.badResult',
+};
+
+const MAP_LOAD_ERROR_BODY_KEY: Record<MapFileErrorReason, StringKey> = {
+  badJson: 'mapfile.error.badJson',
+  badShape: 'mapfile.error.badShape',
+  wrongApp: 'mapfile.error.wrongApp',
+  wrongKind: 'mapfile.error.wrongKind',
+  wrongVersion: 'mapfile.error.wrongVersion',
+  badMap: 'mapfile.error.badMap',
 };
 
 export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): WelcomeHandle {
@@ -75,7 +88,7 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
     '<div class="logo-coin">' +
     '<span class="logo-c">C</span><span class="logo-oin">oin</span>' +
     '</div>' +
-    '<div class="logo-2000">2000</div>';
+    '<div class="logo-2026">2026</div>';
 
   const signature = document.createElement('div');
   signature.className = 'welcome-signature';
@@ -86,15 +99,25 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
   actions.className = 'welcome-actions';
   const btnStart = makeActionButton(true);
   const btnReplay = makeActionButton(false);
-  actions.append(btnStart, btnReplay);
+  const btnLoadMap = makeActionButton(false);
+  const btnEditor = makeActionButton(false);
+  actions.append(btnStart, btnReplay, btnLoadMap, btnEditor);
 
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.accept = '.json,application/json';
-  fileInput.hidden = true;
-  fileInput.style.display = 'none';
+  const replayFileInput = document.createElement('input');
+  replayFileInput.type = 'file';
+  replayFileInput.accept = '.replay.coin';
+  replayFileInput.hidden = true;
+  replayFileInput.style.display = 'none';
 
-  main.append(logo, signature, mapPicker.root, actions, fileInput);
+  const mapFileInput = document.createElement('input');
+  mapFileInput.type = 'file';
+  // Both map files and replay files are accepted — a replay's embedded map
+  // is enough to start a fresh game on that layout.
+  mapFileInput.accept = '.map.coin,.replay.coin';
+  mapFileInput.hidden = true;
+  mapFileInput.style.display = 'none';
+
+  main.append(logo, signature, mapPicker.root, actions, replayFileInput, mapFileInput);
   body.append(sidebar, main);
 
   const footer = document.createElement('div');
@@ -179,6 +202,8 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
     signature.textContent = t('welcome.signature');
     btnStart.textContent = t('welcome.action.start');
     btnReplay.textContent = t('welcome.action.replay');
+    btnLoadMap.textContent = t('welcome.action.loadMap');
+    btnEditor.textContent = t('welcome.action.editor');
     footer.textContent = t('welcome.footer');
     mapPicker.refresh();
 
@@ -199,11 +224,20 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
   btnGuide.addEventListener('click', () => openCfgModal('guide'));
   btnLang.addEventListener('click', toggleLocale);
 
-  btnReplay.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', async () => {
-    const file = fileInput.files?.[0];
-    fileInput.value = '';
+  btnReplay.addEventListener('click', () => replayFileInput.click());
+  replayFileInput.addEventListener('change', async () => {
+    const file = replayFileInput.files?.[0];
+    replayFileInput.value = '';
     if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.replay.coin')) {
+      openModal({
+        kind: 'loadError',
+        titleKey: 'save.error.title',
+        bodyKey: 'save.error.wrongKind',
+        closable: true,
+      });
+      return;
+    }
     let saveFile: SaveFile;
     try {
       const text = await file.text();
@@ -221,6 +255,31 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
     }
     opts.onLoadReplay(saveFile);
   });
+
+  btnLoadMap.addEventListener('click', () => mapFileInput.click());
+  mapFileInput.addEventListener('change', async () => {
+    const file = mapFileInput.files?.[0];
+    mapFileInput.value = '';
+    if (!file) return;
+    let mapFile: MapFile;
+    try {
+      const text = await file.text();
+      mapFile = parseMapFile(text);
+    } catch (err) {
+      const reason: MapFileErrorReason =
+        err instanceof MapFileParseError ? err.reason : 'badJson';
+      openModal({
+        kind: 'loadError',
+        titleKey: 'mapfile.error.title',
+        bodyKey: MAP_LOAD_ERROR_BODY_KEY[reason],
+        closable: true,
+      });
+      return;
+    }
+    opts.onLoadMap(mapFile);
+  });
+
+  btnEditor.addEventListener('click', () => opts.onEditMap());
 
   return {
     hide() {

@@ -4,7 +4,7 @@ import type { RoundResult } from '../game/rules';
 import type { Owner, Vec2 } from '../game/types';
 import type { P2Mode } from '../ui/chrome';
 
-export const SAVE_FILE_APP = 'coin2000' as const;
+export const SAVE_FILE_APP = 'coin2026' as const;
 export const SAVE_FILE_VERSION = 1 as const;
 
 export interface ShotRecord {

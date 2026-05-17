@@ -352,7 +352,7 @@ select:hover {
   font-size: 72px;
 }
 
-.welcome-logo .logo-2000 {
+.welcome-logo .logo-2026 {
   font-family: 'Impact', 'Arial Black', 'Helvetica Neue', sans-serif;
   font-weight: 900;
   font-size: 58px;
@@ -430,7 +430,9 @@ select:hover {
 
 .welcome-actions {
   display: flex;
-  gap: 14px;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .welcome-action {
@@ -644,7 +646,7 @@ select:hover {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
-  z-index: 200;
+  z-index: 400;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -712,6 +714,187 @@ select:hover {
 }
 
 .save-actions button:active {
+  border-top-color: #000;
+  border-left-color: #000;
+  border-bottom-color: #ffffff;
+  border-right-color: #ffffff;
+}
+
+/* --- Map editor --- */
+
+#editor-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', system-ui, sans-serif;
+  color: #111;
+}
+
+.editor-card {
+  background: #ececec;
+  border: 2px solid #000;
+  box-shadow: 6px 6px 0 #000;
+  width: min(1100px, 96vw);
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-titlebar {
+  background: linear-gradient(to right, #000a8c, #2848c4);
+  color: #fff;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.editor-layout {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #ececec;
+}
+
+.editor-canvas-wrap {
+  flex: 1 1 auto;
+  padding: 12px;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
+.editor-canvas {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  background: #0e1115;
+  border: 1px solid #888;
+  outline: none;
+  cursor: crosshair;
+}
+
+.editor-canvas:focus {
+  border-color: #2848c4;
+}
+
+.editor-sidebar {
+  flex: 0 0 240px;
+  padding: 10px 12px 12px;
+  border-left: 1px solid #888;
+  background: #f4f4f4;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.editor-section {
+  margin: 0;
+  padding: 6px 10px 10px;
+  background: #fff;
+  border: 1px solid #888;
+}
+
+.editor-section legend {
+  padding: 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.editor-wall-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 4px 0;
+  font-size: 13px;
+  color: #222;
+}
+
+.editor-wall-row select {
+  background: #fff;
+  color: #111;
+  border: 1px solid #888;
+  border-radius: 0;
+  padding: 2px 6px;
+  font: inherit;
+}
+
+.editor-tool-btn {
+  display: block;
+  width: 100%;
+  margin: 4px 0;
+  background: #d8d8d8;
+  color: #000;
+  border: 2px solid #000;
+  border-top-color: #ffffff;
+  border-left-color: #ffffff;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  letter-spacing: 0.5px;
+}
+
+.editor-tool-btn:hover {
+  filter: brightness(1.05);
+}
+
+.editor-tool-btn.selected {
+  background: #fff4a8;
+  border-top-color: #000;
+  border-left-color: #000;
+  border-bottom-color: #ffffff;
+  border-right-color: #ffffff;
+}
+
+.editor-hint {
+  font-size: 12px;
+  color: #333;
+  line-height: 1.4;
+  min-height: 1.4em;
+}
+
+.editor-error {
+  font-size: 12px;
+  color: #aa0000;
+  font-weight: 600;
+  min-height: 1.4em;
+}
+
+.editor-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.editor-actions button {
+  background: #d8d8d8;
+  color: #000;
+  border: 2px solid #000;
+  border-top-color: #ffffff;
+  border-left-color: #ffffff;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+.editor-actions button.primary {
+  background: #fff4a8;
+}
+
+.editor-actions button:active {
   border-top-color: #000;
   border-left-color: #000;
   border-bottom-color: #ffffff;

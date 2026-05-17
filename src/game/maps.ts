@@ -83,7 +83,7 @@ export function getMapById(id: string): MapTemplate {
 // Selection (persisted to localStorage)
 // ---------------------------------------------------------------------------
 
-const STORAGE_KEY = 'coin2000.map.v1';
+const STORAGE_KEY = 'coin2026.map.v1';
 
 type Listener = (id: MapId) => void;
 const listeners = new Set<Listener>();

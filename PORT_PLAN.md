@@ -1,6 +1,6 @@
-# COIN2000 — HTML/JavaScript Port Plan
+# COIN 2026 — HTML/JavaScript Port Plan
 
-Port of the original Turbo Pascal **COIN2000** (1995–2000, Song Jiuqing / Song Studio) to a browser-based game.
+Port of the original Turbo Pascal **COIN 2026** (1995–2000, Song Jiuqing / Yesoft) to a browser-based game.
 
 ---
 

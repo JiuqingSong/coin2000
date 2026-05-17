@@ -31,6 +31,13 @@ export function createCanvasView(canvas: HTMLCanvasElement): CanvasView {
 
   resize();
   window.addEventListener('resize', resize);
+  // Re-resize when the canvas's own CSS box changes — needed for canvases
+  // that appear inside a dynamic flex layout, where the initial
+  // getBoundingClientRect() runs before layout has finalized dimensions.
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+  }
 
   const computeTransform = (table: Table) => {
     const availW = Math.max(1, cssWidth - TABLE_PADDING * 2);

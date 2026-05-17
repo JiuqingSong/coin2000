@@ -6,7 +6,7 @@ import { config } from '../game/config';
 import { EXPLODE_TICKS } from '../game/constants';
 
 const WALL_THICKNESS = 4;
-const STONE_COLOR = '#c84acb';
+const STONE_COLOR = '#7a7d82';
 const BOMB_OUTER = '#222222';
 const TREE_COLOR = '#2a6d3a';
 
@@ -374,8 +374,8 @@ function drawStone(ctx: CanvasRenderingContext2D, coin: Coin): void {
     const pr = r * (0.22 + rand() * 0.45);
     const darkBlob = rand() < 0.5;
     ctx.fillStyle = darkBlob
-      ? `rgba(60,20,60,${(0.10 + rand() * 0.12).toFixed(3)})`
-      : `rgba(255,220,255,${(0.06 + rand() * 0.10).toFixed(3)})`;
+      ? `rgba(35,38,42,${(0.14 + rand() * 0.14).toFixed(3)})`
+      : `rgba(225,228,232,${(0.08 + rand() * 0.12).toFixed(3)})`;
     ctx.beginPath();
     ctx.arc(px, py, pr, 0, Math.PI * 2);
     ctx.fill();
