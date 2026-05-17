@@ -94,7 +94,7 @@ const ZH_STRINGS = {
   'chrome.lang.toggle.title': 'Switch to English',
 
   // welcome screen
-  'welcome.titlebar': 'Yesoft 系列产品',
+  'welcome.titlebar': '',
   'welcome.tool.guide': '说明',
   'welcome.tool.settings': '设置',
   'welcome.tool.about': '关于',
@@ -109,8 +109,7 @@ const ZH_STRINGS = {
   'welcome.footer': '本游戏完全免费，欢迎拷贝。 2026年5月',
   'welcome.modal.back': '返回',
   'welcome.about.title': '关于',
-  'welcome.about.body':
-    'COIN 2026\n作者: Songthin\nYesoft\n\n浏览器移植版 · 2026',
+  'welcome.about.body': 'COIN 2026\n作者: Songthin\n浏览器移植版 · 2026',
   'welcome.replay.title': '放录相',
   'welcome.replay.body': '暂未实现。',
   'welcome.guide.title': '游戏说明',
@@ -269,7 +268,7 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'chrome.lang.toggle.title': '日本語に切り替え',
 
   // welcome screen
-  'welcome.titlebar': 'A Yesoft Production',
+  'welcome.titlebar': '',
   'welcome.tool.guide': 'Guide',
   'welcome.tool.settings': 'Settings',
   'welcome.tool.about': 'About',
@@ -284,8 +283,7 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'welcome.footer': 'Freeware — please share. May 2026',
   'welcome.modal.back': 'Back',
   'welcome.about.title': 'About',
-  'welcome.about.body':
-    'COIN 2026\nBy Songthin\nYesoft\n\nBrowser port · 2026',
+  'welcome.about.body': 'COIN 2026\nBy Songthin\nBrowser port · 2026',
   'welcome.replay.title': 'Replay',
   'welcome.replay.body': 'Not implemented yet.',
   'welcome.guide.title': 'How to Play',
@@ -363,13 +361,17 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
 
   // maps
   'map.classic.name': 'Classic',
-  'map.classic.desc': 'Coins line each side, stones in the middle; top and bottom edges kill.',
+  'map.classic.desc':
+    'Coins line each side, stones in the middle; top and bottom edges kill.',
   'map.allSides.name': 'Cliff Edges',
-  'map.allSides.desc': 'All four edges kill — careless shots launch your own coins off the side.',
+  'map.allSides.desc':
+    'All four edges kill — careless shots launch your own coins off the side.',
   'map.fortified.name': 'Fortified',
-  'map.fortified.desc': 'Stones flank each player as a defensive barrier instead of sitting in the center.',
+  'map.fortified.desc':
+    'Stones flank each player as a defensive barrier instead of sitting in the center.',
   'map.crossed.name': 'Crossed',
-  'map.crossed.desc': "Coins line the top and bottom; the left and right edges become the kill zone.",
+  'map.crossed.desc':
+    'Coins line the top and bottom; the left and right edges become the kill zone.',
 
   // save / load
   'save.title': 'Save Replay',
@@ -383,9 +385,11 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'save.error.wrongKind': 'Please select a .replay.coin file.',
   'save.error.wrongVersion': 'This replay version is not supported.',
   'save.error.badMap': 'The map data in the replay is missing or damaged.',
-  'save.error.badConfig': 'The settings data in the replay is missing or damaged.',
+  'save.error.badConfig':
+    'The settings data in the replay is missing or damaged.',
   'save.error.badShots': 'The shot list in the replay is missing or damaged.',
-  'save.error.badResult': 'The result data in the replay is missing or damaged.',
+  'save.error.badResult':
+    'The result data in the replay is missing or damaged.',
 
   // map file errors
   'mapfile.error.title': 'Could not load map',
@@ -418,7 +422,8 @@ const EN_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'editor.btn.save': 'Save',
   'editor.btn.test': 'Test Play',
   'editor.btn.close': 'Close',
-  'editor.hint.select': 'Click a piece to select, drag to move, Delete to remove.',
+  'editor.hint.select':
+    'Click a piece to select, drag to move, Delete to remove.',
   'editor.hint.place': 'Click empty space to place a piece.',
   'editor.hint.erase': 'Click a piece to delete it.',
   'editor.error.noP1': 'At least 1 player coin is required.',
@@ -444,7 +449,7 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'chrome.lang.toggle.title': '切换到中文',
 
   // welcome screen
-  'welcome.titlebar': 'Yesoft シリーズ',
+  'welcome.titlebar': '',
   'welcome.tool.guide': '遊び方',
   'welcome.tool.settings': '設定',
   'welcome.tool.about': '情報',
@@ -460,7 +465,7 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'welcome.modal.back': '戻る',
   'welcome.about.title': '情報',
   'welcome.about.body':
-    'COIN 2026  バージョン\n作者: Songthin\nYesoft\n\nブラウザ移植版 · 2026',
+    'COIN 2026  バージョン\n作者: Songthin\nブラウザ移植版 · 2026',
   'welcome.replay.title': 'リプレイ',
   'welcome.replay.body': '未実装です。',
   'welcome.guide.title': '遊び方',
@@ -626,11 +631,7 @@ const ZH_ARRAYS = {
     '没办法，谁让电脑这么厉害呢。',
     '明天把改错交上来。',
   ],
-  'banter.draw': [
-    '两败俱伤。',
-    '桌上无人生还。',
-    '平局——两边都打光了。',
-  ],
+  'banter.draw': ['两败俱伤。', '桌上无人生还。', '平局——两边都打光了。'],
 
   'reactions.humanAiming': [
     '和谁碰撞，你的观点呢？',
@@ -766,11 +767,7 @@ const JA_ARRAYS: Record<keyof typeof ZH_ARRAYS, readonly string[]> = {
     '仕方ない、コンピュータが強すぎるんだ。',
     '明日、答え直しを提出するように。',
   ],
-  'banter.draw': [
-    '相打ち。',
-    '盤上に生存者なし。',
-    '引き分け——両者全滅。',
-  ],
+  'banter.draw': ['相打ち。', '盤上に生存者なし。', '引き分け——両者全滅。'],
 
   'reactions.humanAiming': [
     'どこに当たる？君の読みは？',
