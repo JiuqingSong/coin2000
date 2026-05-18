@@ -14,6 +14,7 @@ import type { MapCoinData, MapData } from '../game/mapData';
 import { worldFromMapData } from '../game/mapData';
 import { CoinKind, Owner, type Vec2 } from '../game/types';
 import type { Walls, WallBehavior } from '../game/world';
+import { MapFileParseError, parseMapFile, type MapFileErrorReason } from '../editor/load';
 import { subscribeLocale, t, type StringKey } from '../i18n';
 import { createCanvasView } from '../render/canvas';
 import { drawPiece, drawTable } from '../render/sprites';
@@ -23,7 +24,7 @@ type WallEdge = 'top' | 'bottom' | 'left' | 'right';
 
 export interface MapEditorOptions {
   initialMap: MapData;
-  onSaveMap(map: MapData): void;
+  onSaveMap(map: MapData, suggestedName?: string): void;
   onTestMap(map: MapData): void;
   onClose(): void;
 }
@@ -41,6 +42,7 @@ export function mountMapEditor(parent: HTMLElement, opts: MapEditorOptions): Map
   let cursor: Vec2 | null = null;
   let drag: { index: number; offsetX: number; offsetY: number } | null = null;
   let errorKey: StringKey | null = null;
+  let loadedFileName: string | null = null;
 
   const overlay = document.createElement('div');
   overlay.id = 'editor-modal';
@@ -130,6 +132,8 @@ export function mountMapEditor(parent: HTMLElement, opts: MapEditorOptions): Map
   // ---- Actions ----
   const actions = document.createElement('div');
   actions.className = 'editor-actions';
+  const btnLoad = document.createElement('button');
+  btnLoad.type = 'button';
   const btnClear = document.createElement('button');
   btnClear.type = 'button';
   const btnSave = document.createElement('button');
@@ -139,8 +143,15 @@ export function mountMapEditor(parent: HTMLElement, opts: MapEditorOptions): Map
   btnTest.type = 'button';
   const btnClose = document.createElement('button');
   btnClose.type = 'button';
-  actions.append(btnClear, btnSave, btnTest, btnClose);
+  actions.append(btnLoad, btnClear, btnSave, btnTest, btnClose);
   sidebar.append(actions);
+
+  const mapFileInput = document.createElement('input');
+  mapFileInput.type = 'file';
+  mapFileInput.accept = '.map.coin';
+  mapFileInput.hidden = true;
+  mapFileInput.style.display = 'none';
+  sidebar.append(mapFileInput);
 
   parent.append(overlay);
   overlay.append(card);
@@ -155,6 +166,7 @@ export function mountMapEditor(parent: HTMLElement, opts: MapEditorOptions): Map
     titleEl.textContent = t('editor.title');
     for (const { btn, labelKey } of toolButtons) btn.textContent = t(labelKey);
     for (const fn of wallRowRefreshers) fn();
+    btnLoad.textContent = t('editor.btn.load');
     btnClear.textContent = t('editor.btn.clear');
     btnSave.textContent = t('editor.btn.save');
     btnTest.textContent = t('editor.btn.test');
@@ -255,6 +267,41 @@ export function mountMapEditor(parent: HTMLElement, opts: MapEditorOptions): Map
   // Action buttons
   // ---------------------------------------------------------------------------
 
+  btnLoad.addEventListener('click', () => mapFileInput.click());
+
+  mapFileInput.addEventListener('change', async () => {
+    const file = mapFileInput.files?.[0];
+    mapFileInput.value = '';
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = parseMapFile(text);
+      // Replace working copy in-place so all closures see the new data.
+      mapData.table = { ...parsed.map.table };
+      mapData.walls = { ...parsed.map.walls };
+      mapData.coins.length = 0;
+      mapData.coins.push(...parsed.map.coins.map((c) => ({ ...c })));
+      selectedIndex = null;
+      hoverIndex = null;
+      drag = null;
+      loadedFileName = file.name;
+      clearError();
+      refreshWallSelectors();
+    } catch (err) {
+      const reason: MapFileErrorReason =
+        err instanceof MapFileParseError ? err.reason : 'badJson';
+      const KEY_MAP: Record<MapFileErrorReason, StringKey> = {
+        badJson:       'mapfile.error.badJson',
+        badShape:      'mapfile.error.badShape',
+        wrongApp:      'mapfile.error.wrongApp',
+        wrongKind:     'mapfile.error.wrongKind',
+        wrongVersion:  'mapfile.error.wrongVersion',
+        badMap:        'mapfile.error.badMap',
+      };
+      setError(KEY_MAP[reason]);
+    }
+  });
+
   btnClear.addEventListener('click', () => {
     mapData.coins.length = 0;
     selectedIndex = null;
@@ -268,7 +315,7 @@ export function mountMapEditor(parent: HTMLElement, opts: MapEditorOptions): Map
       return;
     }
     clearError();
-    opts.onSaveMap(cloneMap(mapData));
+    opts.onSaveMap(cloneMap(mapData), loadedFileName ?? undefined);
   });
 
   btnTest.addEventListener('click', () => {

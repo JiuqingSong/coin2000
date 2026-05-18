@@ -385,8 +385,8 @@ const openEditor = (initialMap: MapData) => {
   editor?.hide();
   editor = mountMapEditor(document.body, {
     initialMap,
-    onSaveMap: (map) => {
-      const filename = defaultMapFileName();
+    onSaveMap: (map, suggestedName) => {
+      const filename = suggestedName ?? defaultMapFileName();
       const file: MapFile = {
         app: MAP_FILE_APP,
         version: MAP_FILE_VERSION,
