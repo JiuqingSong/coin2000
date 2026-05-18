@@ -1,7 +1,7 @@
 import { Bell } from './audio/bell';
 import { Music } from './audio/music';
 import { Engine } from './game/engine';
-import { Owner } from './game/types';
+import { CoinKind, Owner } from './game/types';
 import { applyConfig, config, loadConfig, subscribeConfig, type GameConfig } from './game/config';
 import { materializeSelectedMap } from './game/setup';
 import type { MapData } from './game/mapData';
@@ -14,7 +14,7 @@ import { ReplayPlayer, createReplayQueue, type ReplayQueue } from './players/rep
 import { createCanvasView } from './render/canvas';
 import { mountChrome, type P2Mode } from './ui/chrome';
 import { mountConfig } from './ui/config';
-import { mountHud } from './ui/hud';
+import { mountHud, type GameInfo } from './ui/hud';
 import { mountMapEditor, type MapEditorHandle } from './ui/mapEditor';
 import { mountReactions } from './ui/reactions';
 import { mountSaveDialog } from './ui/saveDialog';
@@ -25,6 +25,7 @@ import {
   type SaveFile,
   type ShotRecord,
 } from './replay/types';
+import { parseSaveFile } from './replay/load';
 import {
   REPLAY_FILE_EXT,
   defaultSaveFileName,
@@ -79,6 +80,8 @@ let replayQueue: ReplayQueue | null = null;
 let recordedShots: ShotRecord[] = [];
 let lastResult: RoundResult | null = null;
 let preReplayConfig: GameConfig | null = null;
+let currentReplaySave: SaveFile | null = null;
+let replayBaseShots: ShotRecord[] = [];
 let welcome: WelcomeHandle | null = null;
 let editor: MapEditorHandle | null = null;
 let customMap: MapData | null = null;
@@ -97,18 +100,104 @@ const buildPlayer = (owner: Owner): Player => {
 const isAiTurn = (owner: Owner) =>
   gameMode === 'play' && owner === Owner.P2 && p2Mode === 'ai';
 
+function gameInfoFromMap(map: MapData, cfg: GameConfig): GameInfo {
+  let p1Coins = 0, p2Coins = 0, stones = 0, bombs = 0, holes = 0, trees = 0;
+  let coinRadius = cfg.coinRadius;
+  let coinMass = cfg.coinMass;
+  for (const c of map.coins) {
+    if (c.kind === CoinKind.Coin) {
+      if (c.owner === Owner.P1) { p1Coins++; coinRadius = c.radius; coinMass = c.mass; }
+      else if (c.owner === Owner.P2) p2Coins++;
+    } else if (c.kind === CoinKind.Stone) stones++;
+    else if (c.kind === CoinKind.Bomb) bombs++;
+    else if (c.kind === CoinKind.Hole) holes++;
+    else if (c.kind === CoinKind.Tree) trees++;
+  }
+  return {
+    p1Coins, p2Coins, stones, bombs, holes, trees,
+    coinRadius, coinMass,
+    maxShotSpeed: cfg.maxShotSpeed,
+    aiAngleSamples: cfg.aiAngleSamples,
+    keepShotOnKill: cfg.keepShotOnKill,
+    explosionRadius: cfg.explosionRadius,
+  };
+}
+
 const restart = () => {
   if (gameMode !== 'play') return;
   hud.clearResult();
   reactions.clear();
   recordedShots = [];
+  replayBaseShots = [];
   lastResult = null;
   if (customMap !== null) {
     engine.startWithMap(customMap);
   } else {
     engine.start();
   }
+  hud.setGameInfo(gameInfoFromMap(engine.getCurrentMap(), config));
   music.start();
+};
+
+const goToWelcome = () => {
+  engine.stop();
+  editor?.hide();
+  editor = null;
+  if (gameMode === 'replay') {
+    if (preReplayConfig) {
+      applyConfig(preReplayConfig);
+      preReplayConfig = null;
+    }
+    replayQueue = null;
+    currentReplaySave = null;
+    chrome.setReplayMode(false);
+    gameMode = 'play';
+    engine.setPlayer(Owner.P1, buildPlayer(Owner.P1));
+    engine.setPlayer(Owner.P2, buildPlayer(Owner.P2));
+  }
+  if (customMap !== null) {
+    customMap = null;
+    chrome.setCustomMapActive(false);
+  }
+  if (editingMap !== null) {
+    editingMap = null;
+    chrome.setEditingMode(false);
+  }
+  recordedShots = [];
+  replayBaseShots = [];
+  lastResult = null;
+  hud.clearResult();
+  hud.setGameInfo(null);
+  hud.setReplayControlsVisible(false);
+  hud.setReplayPaused(false);
+  reactions.clear();
+  showWelcome();
+};
+
+const continueFromHere = () => {
+  if (gameMode !== 'replay' || !engine.isPaused() || !currentReplaySave) return;
+
+  // Determine which shots from the replay file have already been played.
+  const totalShots = currentReplaySave.shots.length;
+  const remaining = replayQueue?.remaining() ?? 0;
+  replayBaseShots = currentReplaySave.shots.slice(0, totalShots - remaining);
+
+  // Keep the replay config as the active config (don't restore preReplayConfig).
+  preReplayConfig = null;
+
+  // Tear down replay state.
+  replayQueue = null;
+  currentReplaySave = null;
+  gameMode = 'play';
+  recordedShots = [];
+  lastResult = null;
+
+  chrome.setReplayMode(false);
+  hud.setReplayControlsVisible(false);
+  hud.setReplayPaused(false);
+
+  // Atomically swap both players from ReplayPlayer to Human/AI and resume.
+  engine.continueAsPlay(buildPlayer(Owner.P1), buildPlayer(Owner.P2));
 };
 
 const hud = mountHud(
@@ -117,7 +206,40 @@ const hud = mountHud(
   {
     onPlayAgain: restart,
     onSaveReplay: () => openSaveDialog(),
-    onBackToWelcome: () => exitReplay(),
+    onBackToWelcome: () => goToWelcome(),
+    onReplayPause: () => {
+      engine.pause();
+      if (engine.isPaused()) hud.setReplayPaused(true);
+    },
+    onReplayResume: () => {
+      engine.resume();
+      hud.setReplayPaused(false);
+    },
+    onReplayStep: () => {
+      engine.stepOne();
+      hud.setReplayPaused(false);
+    },
+    onContinueFromHere: () => continueFromHere(),
+    onReplayAgain: () => {
+      if (currentReplaySave) startReplay(currentReplaySave);
+    },
+    onLoadAnotherReplay: () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.replay.coin';
+      input.addEventListener('change', async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const save = parseSaveFile(text);
+          startReplay(save);
+        } catch {
+          // ignore parse errors silently
+        }
+      });
+      input.click();
+    },
   },
   p2Mode,
 );
@@ -161,6 +283,9 @@ const engine = new Engine({
     lastResult = result;
     hud.showResult(result, gameMode);
   },
+  onPaused: () => {
+    hud.setReplayPaused(true);
+  },
 });
 
 const chrome = mountChrome(chromeEl, {
@@ -185,6 +310,7 @@ const chrome = mountChrome(chromeEl, {
   },
   onRestart: restart,
   onMusicToggle: () => music.toggle(),
+  onBackToWelcome: () => goToWelcome(),
   onBackToEditor: () => {
     if (editingMap === null) return;
     engine.stop();
@@ -216,6 +342,7 @@ const welcomeOpts = {
     recordedShots = [];
     lastResult = null;
     engine.start();
+    hud.setGameInfo(gameInfoFromMap(engine.getCurrentMap(), config));
     music.start();
   },
   onSettings: () => configDialog.open(),
@@ -250,6 +377,7 @@ const startCustomMap = (map: MapData) => {
   recordedShots = [];
   lastResult = null;
   engine.startWithMap(map);
+  hud.setGameInfo(gameInfoFromMap(map, config));
   music.start();
 };
 
@@ -291,6 +419,8 @@ const openEditor = (initialMap: MapData) => {
 };
 
 const startReplay = (save: SaveFile) => {
+  replayBaseShots = [];
+  currentReplaySave = save;
   preReplayConfig = { ...config };
   applyConfig(save.config);
   gameMode = 'replay';
@@ -301,29 +431,19 @@ const startReplay = (save: SaveFile) => {
   reactions.clear();
   chrome.setReplayMode(true);
   engine.startWithMap(save.map);
+  hud.setGameInfo(gameInfoFromMap(save.map, save.config));
+  hud.setReplayControlsVisible(true);
+  hud.setReplayPaused(false);
   music.start();
 };
 
-const exitReplay = () => {
-  engine.stop();
-  if (preReplayConfig) {
-    applyConfig(preReplayConfig);
-    preReplayConfig = null;
-  }
-  gameMode = 'play';
-  replayQueue = null;
-  chrome.setReplayMode(false);
-  hud.clearResult();
-  reactions.clear();
-  engine.setPlayer(Owner.P1, buildPlayer(Owner.P1));
-  engine.setPlayer(Owner.P2, buildPlayer(Owner.P2));
-  showWelcome();
-};
 
 const openSaveDialog = () => {
   if (!lastResult || gameMode !== 'play') return;
   const result = lastResult;
-  const shots = recordedShots.slice();
+  // If the game was continued from a replay, prepend the already-played shots
+  // so the saved file replays the full game from the beginning.
+  const shots = [...replayBaseShots, ...recordedShots];
   saveDialog.open({
     defaultName: defaultSaveFileName(),
     extension: REPLAY_FILE_EXT,

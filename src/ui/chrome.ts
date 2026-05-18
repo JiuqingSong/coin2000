@@ -1,4 +1,4 @@
-import { subscribeLocale, t, toggleLocale } from '../i18n';
+import { getLocale, setLocale, subscribeLocale, t, type Locale } from '../i18n';
 import {
   MAPS,
   getSelectedMapId,
@@ -17,6 +17,7 @@ export interface ChromeOptions {
   onRestart(): void;
   onMusicToggle(): void;
   onBackToEditor(): void;
+  onBackToWelcome(): void;
 }
 
 export interface ChromeHandle {
@@ -115,17 +116,29 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): ChromeHandl
     musicBtnEl = musicBtn;
     refreshMusicBtn();
 
-    const langBtn = document.createElement('button');
-    langBtn.type = 'button';
-    langBtn.className = 'lang-toggle';
-    langBtn.textContent = t('chrome.lang.toggle');
-    langBtn.title = t('chrome.lang.toggle.title');
-    langBtn.setAttribute('aria-label', t('chrome.lang.toggle.title'));
-    langBtn.addEventListener('click', toggleLocale);
+    const langSelect = document.createElement('select');
+    const LANG_OPTIONS: Array<{ value: Locale; label: string }> = [
+      { value: 'zh', label: '中文' },
+      { value: 'en', label: 'English' },
+      { value: 'ja', label: '日本語' },
+    ];
+    for (const { value, label } of LANG_OPTIONS) {
+      const opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = label;
+      langSelect.append(opt);
+    }
+    langSelect.value = getLocale();
+    langSelect.addEventListener('change', () => setLocale(langSelect.value as Locale));
+
+    const backToWelcome = document.createElement('button');
+    backToWelcome.type = 'button';
+    backToWelcome.textContent = t('chrome.backToWelcome');
+    backToWelcome.addEventListener('click', opts.onBackToWelcome);
 
     controls.append(p2Label, mapLabel, restart);
     if (editingMode) controls.append(backToEditor);
-    controls.append(musicBtn, langBtn);
+    controls.append(musicBtn, backToWelcome, langSelect);
     controlsEl = controls;
     controls.hidden = replayMode;
     root.append(title, controls);

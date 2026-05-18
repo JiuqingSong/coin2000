@@ -100,15 +100,12 @@ export function step(world: World, events?: PhysicsEvents): void {
       const bBomb = b.kind === CoinKind.Bomb;
 
       if (aBomb || bBomb) {
+        // Don't detonate bombs that are merely resting close to one another —
+        // at least one must be moving for this to count as a real collision.
+        if (a.vel.x === 0 && a.vel.y === 0 && b.vel.x === 0 && b.vel.y === 0) continue;
         const bomb = aBomb ? a : b;
         const trigger = aBomb ? b : a;
-        if (trigger.kind === CoinKind.Bomb) {
-          // Two bombs colliding — both trigger; treat one as the bomb and the
-          // other as the trigger that will (likely) die in the explosion.
-          triggerExplosion(world, bomb, trigger, events);
-        } else {
-          triggerExplosion(world, bomb, trigger, events);
-        }
+        triggerExplosion(world, bomb, trigger, events);
         continue;
       }
 

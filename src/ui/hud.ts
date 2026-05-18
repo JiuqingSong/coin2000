@@ -6,10 +6,31 @@ import type { RoundResult } from '../game/rules';
 export type P2Mode = 'ai' | 'human';
 export type OverlayMode = 'play' | 'replay';
 
+export interface GameInfo {
+  p1Coins: number;
+  p2Coins: number;
+  stones: number;
+  bombs: number;
+  holes: number;
+  trees: number;
+  coinRadius: number;
+  coinMass: number;
+  maxShotSpeed: number;
+  aiAngleSamples: number;
+  keepShotOnKill: boolean;
+  explosionRadius: number;
+}
+
 export interface HudCallbacks {
   onPlayAgain(): void;
   onSaveReplay(): void;
   onBackToWelcome(): void;
+  onReplayAgain(): void;
+  onLoadAnotherReplay(): void;
+  onReplayPause(): void;
+  onReplayResume(): void;
+  onReplayStep(): void;
+  onContinueFromHere(): void;
 }
 
 export interface HudHandle {
@@ -17,6 +38,9 @@ export interface HudHandle {
   setP2Mode(mode: P2Mode): void;
   showResult(result: RoundResult, mode: OverlayMode): void;
   clearResult(): void;
+  setGameInfo(info: GameInfo | null): void;
+  setReplayControlsVisible(visible: boolean): void;
+  setReplayPaused(paused: boolean): void;
 }
 
 export function mountHud(
@@ -39,7 +63,31 @@ export function mountHud(
   const status = document.createElement('div');
   status.className = 'status';
 
-  hudRoot.append(pill, counts, status);
+  const replayControls = document.createElement('div');
+  replayControls.className = 'hud-replay-controls';
+  replayControls.hidden = true;
+
+  const pauseBtn = document.createElement('button');
+  pauseBtn.type = 'button';
+  pauseBtn.className = 'hud-replay-btn';
+
+  const stepBtn = document.createElement('button');
+  stepBtn.type = 'button';
+  stepBtn.className = 'hud-replay-btn';
+  stepBtn.textContent = '⏭';
+
+  const continueBtn = document.createElement('button');
+  continueBtn.type = 'button';
+  continueBtn.className = 'hud-replay-btn';
+  continueBtn.textContent = '🕹️';
+
+  replayControls.append(pauseBtn, stepBtn, continueBtn);
+
+  const infoSection = document.createElement('div');
+  infoSection.className = 'hud-info';
+  infoSection.hidden = true;
+
+  hudRoot.append(pill, counts, status, replayControls, infoSection);
 
   overlayRoot.replaceChildren();
   const card = document.createElement('div');
@@ -66,7 +114,16 @@ export function mountHud(
   backBtn.className = 'primary';
   backBtn.addEventListener('click', callbacks.onBackToWelcome);
 
-  buttonRow.append(playAgainBtn, saveBtn, backBtn);
+  const replayAgainBtn = document.createElement('button');
+  replayAgainBtn.type = 'button';
+  replayAgainBtn.className = 'primary';
+  replayAgainBtn.addEventListener('click', callbacks.onReplayAgain);
+
+  const loadReplayBtn = document.createElement('button');
+  loadReplayBtn.type = 'button';
+  loadReplayBtn.addEventListener('click', callbacks.onLoadAnotherReplay);
+
+  buttonRow.append(playAgainBtn, saveBtn, replayAgainBtn, loadReplayBtn, backBtn);
   card.append(winnerText, banter, buttonRow);
   overlayRoot.append(card);
   overlayRoot.hidden = true;
@@ -81,6 +138,72 @@ export function mountHud(
   let lastWorld: World | null = null;
   let overlayMode: OverlayMode = 'play';
 
+  let replayPaused = false;
+
+  const applyReplayPaused = () => {
+    if (replayPaused) {
+      pauseBtn.textContent = '▶';
+      pauseBtn.title = t('hud.replay.resume');
+      pauseBtn.onclick = () => callbacks.onReplayResume();
+      stepBtn.disabled = false;
+      continueBtn.disabled = false;
+    } else {
+      pauseBtn.textContent = '⏸';
+      pauseBtn.title = t('hud.replay.pause');
+      pauseBtn.onclick = () => callbacks.onReplayPause();
+      stepBtn.disabled = true;
+      continueBtn.disabled = true;
+    }
+    stepBtn.title = t('hud.replay.step');
+    continueBtn.title = t('hud.replay.continueFromHere');
+  };
+
+  applyReplayPaused();
+
+  let currentInfo: GameInfo | null = null;
+
+  const INFO_ROWS: Array<{ key: StringKey; get: (i: GameInfo) => string }> = [
+    { key: 'hud.info.p1Coins',        get: (i) => String(i.p1Coins) },
+    { key: 'hud.info.p2Coins',        get: (i) => String(i.p2Coins) },
+    { key: 'hud.info.stones',         get: (i) => String(i.stones) },
+    { key: 'hud.info.bombs',          get: (i) => String(i.bombs) },
+    { key: 'hud.info.holes',          get: (i) => String(i.holes) },
+    { key: 'hud.info.trees',          get: (i) => String(i.trees) },
+    { key: 'hud.info.coinRadius',     get: (i) => String(i.coinRadius) },
+    { key: 'hud.info.coinMass',       get: (i) => String(i.coinMass) },
+    { key: 'hud.info.maxSpeed',       get: (i) => String(i.maxShotSpeed) },
+    { key: 'hud.info.aiDifficulty',   get: (i) => String(i.aiAngleSamples) },
+    { key: 'hud.info.keepShotOnKill', get: (i) => t(i.keepShotOnKill ? 'hud.info.on' : 'hud.info.off') },
+    { key: 'hud.info.explosionRadius',get: (i) => String(i.explosionRadius) },
+  ];
+
+  const refreshInfo = () => {
+    if (currentInfo === null) {
+      infoSection.hidden = true;
+      return;
+    }
+    infoSection.hidden = false;
+    infoSection.replaceChildren();
+
+    const heading = document.createElement('div');
+    heading.className = 'hud-info-heading';
+    heading.textContent = t('hud.info.heading');
+    infoSection.append(heading);
+
+    for (const { key, get } of INFO_ROWS) {
+      const row = document.createElement('div');
+      row.className = 'hud-info-row';
+      const label = document.createElement('span');
+      label.className = 'hud-info-label';
+      label.textContent = t(key);
+      const val = document.createElement('span');
+      val.className = 'hud-info-value';
+      val.textContent = get(currentInfo);
+      row.append(label, val);
+      infoSection.append(row);
+    }
+  };
+
   // Result/banter state held across locale changes.
   let lastResult: RoundResult | null = null;
   let banterPoolKey: ArrayKey | null = null;
@@ -92,13 +215,17 @@ export function mountHud(
     playAgainBtn.textContent = t('hud.playAgain');
     saveBtn.textContent = t('hud.saveReplay');
     backBtn.textContent = t('hud.backToWelcome');
+    replayAgainBtn.textContent = t('hud.replayAgain');
+    loadReplayBtn.textContent = t('hud.loadReplay');
   };
 
   const applyOverlayMode = () => {
     const isReplay = overlayMode === 'replay';
     playAgainBtn.hidden = isReplay;
     saveBtn.hidden = isReplay;
-    backBtn.hidden = !isReplay;
+    replayAgainBtn.hidden = !isReplay;
+    loadReplayBtn.hidden = !isReplay;
+    backBtn.hidden = false;
   };
 
   const refreshStatus = () => {
@@ -143,6 +270,9 @@ export function mountHud(
 
   applyStaticLabels();
   applyOverlayMode();
+  stepBtn.addEventListener('click', () => callbacks.onReplayStep());
+  continueBtn.addEventListener('click', () => callbacks.onContinueFromHere());
+
   subscribeLocale(() => {
     applyStaticLabels();
     lastPillText = '';
@@ -150,6 +280,8 @@ export function mountHud(
     refreshPill();
     refreshStatus();
     refreshResult();
+    refreshInfo();
+    applyReplayPaused();
   });
 
   return {
@@ -192,6 +324,17 @@ export function mountHud(
       banterPoolKey = null;
       overlayRoot.classList.remove('visible');
       overlayRoot.hidden = true;
+    },
+    setGameInfo(info: GameInfo | null) {
+      currentInfo = info;
+      refreshInfo();
+    },
+    setReplayControlsVisible(visible: boolean) {
+      replayControls.hidden = !visible;
+    },
+    setReplayPaused(paused: boolean) {
+      replayPaused = paused;
+      applyReplayPaused();
     },
   };
 }

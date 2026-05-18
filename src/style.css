@@ -170,6 +170,72 @@ select:hover {
   font-size: 13px;
 }
 
+.hud-replay-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.hud-replay-controls[hidden] {
+  display: none;
+}
+
+.hud-replay-btn {
+  flex: 1;
+  font-size: 20px;
+  padding: 4px 0;
+  line-height: 1;
+  background: var(--bg-elev);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.hud-replay-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.hud-replay-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.hud-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.hud-info-heading {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.hud-info-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.hud-info-label {
+  color: var(--muted);
+  flex: 1;
+  min-width: 0;
+}
+
+.hud-info-value {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 #overlay {
   position: absolute;
   inset: 0;
@@ -461,6 +527,25 @@ select:hover {
   border-left-color: #000;
   border-bottom-color: #ffffff;
   border-right-color: #ffffff;
+}
+
+.welcome-lang-select {
+  margin-top: auto;
+  width: 100%;
+  background: #d8d8d8;
+  color: #000;
+  border: 2px solid #000;
+  border-top-color: #ffffff;
+  border-left-color: #ffffff;
+  border-radius: 0;
+  padding: 5px 4px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.welcome-lang-select:hover {
+  filter: brightness(1.05);
 }
 
 .welcome-footer {

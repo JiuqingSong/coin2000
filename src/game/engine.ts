@@ -30,6 +30,7 @@ export interface EngineOptions {
   onShotRecorded?(shooter: Owner.P1 | Owner.P2, coinId: CoinId, vel: Vec2): void;
   onTurnSettled?(info: TurnSettled): void;
   onRoundEnd?(result: RoundResult): void;
+  onPaused?(): void;
 }
 
 export class Engine {
@@ -43,6 +44,8 @@ export class Engine {
   private preShotP1 = 0;
   private preShotP2 = 0;
   private currentMap: MapData;
+  private paused = false;
+  private pauseAfterSettle = false;
 
   constructor(private readonly opts: EngineOptions) {
     this.currentMap = materializeSelectedMap();
@@ -70,6 +73,8 @@ export class Engine {
 
   startWithMap(map: MapData): void {
     this.players[this.world.current].cancelTurn();
+    this.paused = false;
+    this.pauseAfterSettle = false;
     this.currentMap = map;
     this.world = worldFromMapData(map);
     this.world.phase = Phase.Aiming;
@@ -87,10 +92,59 @@ export class Engine {
 
   stop(): void {
     this.running = false;
+    this.paused = false;
+    this.pauseAfterSettle = false;
     this.players[Owner.P1].cancelTurn();
     this.players[Owner.P2].cancelTurn();
     this.opts.aim.stop();
     this.world.phase = Phase.Idle;
+  }
+
+  isPaused(): boolean {
+    return this.paused;
+  }
+
+  pause(): void {
+    if (this.paused || this.pauseAfterSettle) return;
+    if (this.world.phase === Phase.Aiming) {
+      this.players[this.world.current].cancelTurn();
+      this.paused = true;
+      this.opts.onPaused?.();
+    } else if (this.world.phase === Phase.Simulating) {
+      this.pauseAfterSettle = true;
+    }
+  }
+
+  resume(): void {
+    if (!this.paused) return;
+    this.paused = false;
+    if (this.world.phase === Phase.Aiming) {
+      this.players[this.world.current].startTurn(this.world, this.onShoot);
+      this.opts.onTurnStart?.(this.world.current);
+    }
+  }
+
+  stepOne(): void {
+    if (!this.paused) return;
+    this.paused = false;
+    this.pauseAfterSettle = true;
+    if (this.world.phase === Phase.Aiming) {
+      this.players[this.world.current].startTurn(this.world, this.onShoot);
+      this.opts.onTurnStart?.(this.world.current);
+    }
+  }
+
+  // Switch both players atomically while unpausing, so the world is never left
+  // in a state where one player is a ReplayPlayer and the other is not.
+  continueAsPlay(p1: Player, p2: Player): void {
+    if (!this.paused) return;
+    this.paused = false;
+    this.pauseAfterSettle = false;
+    this.players[Owner.P1] = p1;
+    this.players[Owner.P2] = p2;
+    const current = this.world.current;
+    this.players[current].startTurn(this.world, this.onShoot);
+    this.opts.onTurnStart?.(current);
   }
 
   setPlayer(owner: Owner.P1 | Owner.P2, player: Player): void {
@@ -177,6 +231,14 @@ export class Engine {
     }
     this.world.phase = Phase.Aiming;
     this.opts.aim.stop();
+
+    if (this.pauseAfterSettle) {
+      this.pauseAfterSettle = false;
+      this.paused = true;
+      this.opts.onPaused?.();
+      return;
+    }
+
     this.players[this.world.current].startTurn(this.world, this.onShoot);
     this.opts.onTurnStart?.(this.world.current);
   }

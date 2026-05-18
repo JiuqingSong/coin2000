@@ -1,4 +1,4 @@
-import { subscribeLocale, t, toggleLocale, type StringKey } from '../i18n';
+import { getLocale, setLocale, subscribeLocale, t, type Locale, type StringKey } from '../i18n';
 import {
   MAPS,
   getSelectedMapId,
@@ -75,9 +75,24 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
   const btnGuide = makeToolButton();
   const btnSettings = makeToolButton();
   const btnAbout = makeToolButton();
-  const btnLang = makeToolButton();
-  btnLang.classList.add('lang');
-  sidebar.append(btnGuide, btnSettings, btnAbout, btnLang);
+  const btnEditor = makeToolButton();
+
+  const langSelect = document.createElement('select');
+  langSelect.className = 'welcome-lang-select';
+  const LANG_OPTIONS: Array<{ value: Locale; label: string }> = [
+    { value: 'zh', label: '中文' },
+    { value: 'en', label: 'English' },
+    { value: 'ja', label: '日本語' },
+  ];
+  for (const { value, label } of LANG_OPTIONS) {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    langSelect.append(opt);
+  }
+  langSelect.value = getLocale();
+
+  sidebar.append(btnGuide, btnSettings, btnAbout, btnEditor, langSelect);
 
   const main = document.createElement('div');
   main.className = 'welcome-main';
@@ -95,13 +110,16 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
 
   const mapPicker = buildMapPicker();
 
+  const btnLoadMap = document.createElement('button');
+  btnLoadMap.type = 'button';
+  btnLoadMap.className = 'welcome-map-btn';
+  mapPicker.grid.append(btnLoadMap);
+
   const actions = document.createElement('div');
   actions.className = 'welcome-actions';
   const btnStart = makeActionButton(true);
   const btnReplay = makeActionButton(false);
-  const btnLoadMap = makeActionButton(false);
-  const btnEditor = makeActionButton(false);
-  actions.append(btnStart, btnReplay, btnLoadMap, btnEditor);
+  actions.append(btnStart, btnReplay);
 
   const replayFileInput = document.createElement('input');
   replayFileInput.type = 'file';
@@ -198,7 +216,7 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
     btnGuide.textContent = t('welcome.tool.guide');
     btnSettings.textContent = t('welcome.tool.settings');
     btnAbout.textContent = t('welcome.tool.about');
-    btnLang.textContent = t('welcome.tool.lang');
+    langSelect.value = getLocale();
     signature.textContent = t('welcome.signature');
     btnStart.textContent = t('welcome.action.start');
     btnReplay.textContent = t('welcome.action.replay');
@@ -222,7 +240,7 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
   btnSettings.addEventListener('click', () => opts.onSettings());
   btnAbout.addEventListener('click', () => openCfgModal('about'));
   btnGuide.addEventListener('click', () => openCfgModal('guide'));
-  btnLang.addEventListener('click', toggleLocale);
+  langSelect.addEventListener('change', () => setLocale(langSelect.value as Locale));
 
   btnReplay.addEventListener('click', () => replayFileInput.click());
   replayFileInput.addEventListener('change', async () => {
@@ -292,6 +310,7 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
 
 interface MapPicker {
   root: HTMLElement;
+  grid: HTMLElement;
   refresh(): void;
 }
 
@@ -335,7 +354,7 @@ function buildMapPicker(): MapPicker {
   };
   refresh();
 
-  return { root, refresh };
+  return { root, grid, refresh };
 }
 
 function makeToolButton(): HTMLButtonElement {
