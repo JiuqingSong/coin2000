@@ -464,3 +464,21 @@ const openSaveDialog = () => {
 };
 
 showWelcome();
+
+// Mobile landscape enforcement
+const landscapePrompt = document.getElementById('landscape-prompt');
+if (landscapePrompt && navigator.maxTouchPoints > 0) {
+  const tryLandscape = async () => {
+    try {
+      if (document.fullscreenEnabled && !document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+      await (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.('landscape');
+    } catch {
+      // Not all browsers support orientation lock; CSS prompt handles the fallback
+    }
+  };
+  landscapePrompt.addEventListener('click', tryLandscape);
+  // Auto-attempt on load (only succeeds if browser allows without gesture)
+  tryLandscape();
+}
