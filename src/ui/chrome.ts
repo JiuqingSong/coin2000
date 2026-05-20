@@ -120,6 +120,7 @@ export function mountChrome(root: HTMLElement, opts: ChromeOptions): ChromeHandl
     const LANG_OPTIONS: Array<{ value: Locale; label: string }> = [
       { value: 'zh', label: '中文' },
       { value: 'en', label: 'English' },
+      { value: 'es', label: 'Español' },
       { value: 'ja', label: '日本語' },
     ];
     for (const { value, label } of LANG_OPTIONS) {
