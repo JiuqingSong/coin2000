@@ -1,13 +1,26 @@
 :root {
   color-scheme: dark;
-  --bg: #1a1d22;
-  --bg-elev: #22272e;
-  --fg: #e6e8eb;
-  --muted: #8a8f98;
-  --accent: #6db4ff;
+  --bg: #1b2838;
+  --bg-elev: #2a475e;
+  --fg: #c6d4df;
+  --muted: #8f98a0;
+  --accent: #66c0f4;
   --p1: #4aa3ff;
   --p2: #ff6b5a;
-  --border: #2a2e34;
+  --border: #1e3d5c;
+
+  /* Steam UI palette */
+  --steam-deep: #0d1520;
+  --steam-panel: #162231;
+  --steam-card: #1b2838;
+  --steam-raised: #213347;
+  --steam-btn: rgba(103, 193, 245, 0.09);
+  --steam-btn-border: rgba(103, 193, 245, 0.25);
+  --steam-btn-hover-bg: rgba(103, 193, 245, 0.16);
+  --steam-btn-hover-border: rgba(103, 193, 245, 0.5);
+  --steam-header-from: #1f3d5c;
+  --steam-header-to: #0d2035;
+  --steam-glow: rgba(102, 192, 244, 0.18);
 }
 
 * {
@@ -30,19 +43,23 @@ body {
   height: 100%;
 }
 
+/* ---- Chrome / top bar ---- */
+
 #chrome {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  background: linear-gradient(180deg, var(--steam-panel) 0%, var(--steam-deep) 100%);
+  border-bottom: 1px solid rgba(103, 193, 245, 0.15);
 }
 
 #chrome .title {
   font-weight: 600;
   letter-spacing: 0.5px;
+  color: var(--accent);
 }
 
 #chrome .controls {
@@ -60,24 +77,38 @@ body {
 
 select,
 button {
-  background: var(--bg-elev);
+  background: var(--steam-btn);
   color: var(--fg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  border: 1px solid var(--steam-btn-border);
+  border-radius: 3px;
   padding: 4px 10px;
   font: inherit;
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+option {
+  background: #1b2838;
+  color: #c6d4df;
 }
 
 button:hover,
 select:hover {
-  border-color: var(--accent);
+  background: var(--steam-btn-hover-bg);
+  border-color: var(--steam-btn-hover-border);
+  color: #fff;
+}
+
+button:active {
+  background: rgba(103, 193, 245, 0.22);
 }
 
 .music-toggle.off {
   color: var(--muted);
-  opacity: 0.7;
+  opacity: 0.6;
 }
+
+/* ---- Stage / game area ---- */
 
 #stage {
   flex: 1 1 auto;
@@ -110,9 +141,9 @@ select:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #11161d;
-  border-top: 1px solid var(--border);
-  color: #d9e2f0;
+  background: #0f1923;
+  border-top: 1px solid rgba(103, 193, 245, 0.12);
+  color: #c6d4df;
   font-size: 14px;
   font-family: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', system-ui, sans-serif;
   text-align: center;
@@ -124,29 +155,32 @@ select:hover {
   opacity: 0;
 }
 
+/* ---- HUD ---- */
+
 #hud {
   flex: 0 0 220px;
-  border-left: 1px solid var(--border);
+  border-left: 1px solid rgba(103, 193, 245, 0.12);
   padding: 14px;
   overflow: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  background: var(--steam-panel);
 }
 
 .pill {
   display: inline-block;
   align-self: flex-start;
-  padding: 4px 10px;
+  padding: 3px 10px;
   border-radius: 999px;
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
+  background: var(--steam-btn);
+  border: 1px solid var(--steam-btn-border);
   color: var(--muted);
   font-size: 13px;
 }
 
-.pill.p1 { color: var(--p1); border-color: var(--p1); }
-.pill.p2 { color: var(--p2); border-color: var(--p2); }
+.pill.p1 { color: var(--p1); border-color: rgba(74, 163, 255, 0.45); }
+.pill.p2 { color: var(--p2); border-color: rgba(255, 107, 90, 0.45); }
 
 .counts {
   display: flex;
@@ -185,19 +219,21 @@ select:hover {
   font-size: 20px;
   padding: 4px 0;
   line-height: 1;
-  background: var(--bg-elev);
+  background: var(--steam-btn);
   color: var(--fg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  border: 1px solid var(--steam-btn-border);
+  border-radius: 3px;
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
 
 .hud-replay-btn:hover:not(:disabled) {
+  background: var(--steam-btn-hover-bg);
   border-color: var(--accent);
 }
 
 .hud-replay-btn:disabled {
-  opacity: 0.35;
+  opacity: 0.3;
   cursor: default;
 }
 
@@ -206,7 +242,7 @@ select:hover {
   flex-direction: column;
   gap: 3px;
   padding-top: 4px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(103, 193, 245, 0.12);
   margin-top: auto;
 }
 
@@ -237,13 +273,15 @@ select:hover {
   text-align: right;
 }
 
+/* ---- Game result overlay ---- */
+
 #overlay {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 10;
   opacity: 0;
   transition: opacity 220ms ease-out;
@@ -260,13 +298,13 @@ select:hover {
 }
 
 .overlay-card {
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 24px 32px;
+  background: var(--steam-card);
+  border: 1px solid rgba(103, 193, 245, 0.35);
+  border-radius: 6px;
+  padding: 28px 36px;
   text-align: center;
-  min-width: 240px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  min-width: 260px;
+  box-shadow: 0 0 0 1px rgba(103, 193, 245, 0.1), 0 16px 48px rgba(0, 0, 0, 0.8);
   transform: scale(0.92);
   transition: transform 220ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
@@ -286,13 +324,13 @@ select:hover {
 .overlay-card .winner.draw { color: var(--muted); }
 
 .overlay-card .banter {
-  margin: 0 0 18px;
+  margin: 0 0 20px;
   font-size: 13px;
   color: var(--muted);
 }
 
 .overlay-card button {
-  padding: 8px 18px;
+  padding: 8px 20px;
   font-size: 14px;
 }
 
@@ -307,12 +345,12 @@ select:hover {
   display: none;
 }
 
-/* --- Welcome screen (legacy-style splash) --- */
+/* ---- Welcome screen (Steam-style dark splash) ---- */
 
 #welcome-screen {
   position: fixed;
   inset: 0;
-  background: #0a0d12;
+  background: radial-gradient(ellipse at 50% 40%, #1b2838 0%, #0d1520 70%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -324,71 +362,85 @@ select:hover {
   position: relative;
   width: 640px;
   max-width: 94vw;
-  background: #ececec;
-  border: 2px solid #000;
-  box-shadow: 6px 6px 0 #000;
+  background: var(--steam-card);
+  border: 1px solid rgba(103, 193, 245, 0.3);
+  box-shadow: 0 0 0 1px rgba(103, 193, 245, 0.08), 0 24px 72px rgba(0, 0, 0, 0.85);
   display: flex;
   flex-direction: column;
-  color: #111;
+  color: var(--fg);
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .welcome-titlebar {
-  background: linear-gradient(to right, #000a8c, #2848c4);
-  color: #ffffff;
-  padding: 6px 12px;
-  font-size: 14px;
+  background: linear-gradient(135deg, var(--steam-header-from) 0%, var(--steam-header-to) 100%);
+  color: #c6d4df;
+  padding: 10px 16px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(103, 193, 245, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.welcome-titlebar::before {
+  content: '◆';
+  color: var(--accent);
+  font-size: 9px;
+  flex-shrink: 0;
 }
 
 .welcome-titlebar sup {
   font-size: 10px;
   margin-left: 1px;
   margin-right: 2px;
+  opacity: 0.7;
 }
 
 .welcome-body {
   display: flex;
-  background: #ffffff;
+  background: var(--steam-card);
 }
 
 .welcome-sidebar {
   width: 96px;
-  background: #aa0000;
-  padding: 16px 10px;
+  background: var(--steam-panel);
+  padding: 12px 8px 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
+  border-right: 1px solid rgba(103, 193, 245, 0.12);
 }
 
 .welcome-tool {
-  background: #d8d8d8;
-  color: #000;
-  border: 2px solid #000;
-  border-top-color: #ffffff;
-  border-left-color: #ffffff;
-  padding: 6px 0;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 8px 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   font-family: inherit;
-  letter-spacing: 2px;
+  letter-spacing: 0.5px;
   text-align: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .welcome-tool:hover {
-  background: #e8e8e8;
+  background: var(--steam-btn-hover-bg);
+  border-color: var(--steam-btn-hover-border);
+  color: #fff;
 }
 
 .welcome-tool:active {
-  border-top-color: #000;
-  border-left-color: #000;
-  border-bottom-color: #ffffff;
-  border-right-color: #ffffff;
+  background: rgba(103, 193, 245, 0.22);
 }
 
 .welcome-main {
   flex: 1;
-  padding: 24px 24px 28px;
+  padding: 20px 24px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -405,8 +457,8 @@ select:hover {
 .welcome-logo .logo-coin {
   font-family: 'Impact', 'Arial Black', 'Helvetica Neue', sans-serif;
   font-weight: 900;
-  color: #aa5500;
-  text-shadow: 4px 4px 0 #5555ff;
+  color: #f0a030;
+  text-shadow: 4px 4px 0 #0d2035, 0 0 40px rgba(240, 160, 48, 0.25);
   letter-spacing: -2px;
   white-space: nowrap;
 }
@@ -423,18 +475,17 @@ select:hover {
   font-family: 'Impact', 'Arial Black', 'Helvetica Neue', sans-serif;
   font-weight: 900;
   font-size: 58px;
-  color: #d8d8d8;
-  text-shadow: 4px 4px 0 #aa0000;
+  color: var(--accent);
+  text-shadow: 4px 4px 0 #0d2035, 0 0 24px rgba(102, 192, 244, 0.35);
   letter-spacing: 4px;
   margin-top: -4px;
 }
 
 .welcome-signature {
-  color: #333;
-  font-size: 13px;
+  color: var(--muted);
+  font-size: 12px;
   font-style: italic;
   margin: 6px 0 18px;
-  text-shadow: 1px 1px 0 #ffffff;
 }
 
 .welcome-maps {
@@ -443,52 +494,53 @@ select:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .welcome-maps-heading {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  color: #444;
+  color: var(--muted);
   letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
 .welcome-maps-grid {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .welcome-map-btn {
-  background: #d8d8d8;
-  color: #000;
-  border: 2px solid #000;
-  border-top-color: #ffffff;
-  border-left-color: #ffffff;
-  padding: 4px 14px;
-  font-size: 13px;
+  background: var(--steam-btn);
+  color: var(--muted);
+  border: 1px solid var(--steam-btn-border);
+  border-radius: 3px;
+  padding: 5px 14px;
+  font-size: 12px;
   font-family: inherit;
   cursor: pointer;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   min-width: 80px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .welcome-map-btn:hover {
-  filter: brightness(1.05);
+  background: var(--steam-btn-hover-bg);
+  border-color: var(--steam-btn-hover-border);
+  color: #fff;
 }
 
 .welcome-map-btn.selected {
-  background: #fff4a8;
-  border-top-color: #000;
-  border-left-color: #000;
-  border-bottom-color: #ffffff;
-  border-right-color: #ffffff;
+  background: rgba(102, 192, 244, 0.18);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .welcome-maps-desc {
   font-size: 12px;
-  color: #333;
+  color: var(--muted);
   text-align: center;
   max-width: 360px;
   min-height: 1.4em;
@@ -503,79 +555,94 @@ select:hover {
 }
 
 .welcome-action {
-  background: #d8d8d8;
-  color: #000;
-  border: 2px solid #000;
-  border-top-color: #ffffff;
-  border-left-color: #ffffff;
-  padding: 8px 28px;
-  font-size: 15px;
+  background: var(--steam-btn);
+  color: var(--fg);
+  border: 1px solid var(--steam-btn-border);
+  border-radius: 3px;
+  padding: 9px 28px;
+  font-size: 14px;
   font-family: inherit;
   cursor: pointer;
-  letter-spacing: 4px;
+  letter-spacing: 2px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .welcome-action.primary {
-  background: #fff4a8;
+  background: linear-gradient(180deg, #1b6ca8 0%, #145a8f 100%);
+  border-color: rgba(102, 192, 244, 0.65);
+  color: #fff;
+  font-weight: 600;
 }
 
 .welcome-action:hover {
-  filter: brightness(1.05);
+  background: var(--steam-btn-hover-bg);
+  border-color: var(--steam-btn-hover-border);
+  color: #fff;
+}
+
+.welcome-action.primary:hover {
+  background: linear-gradient(180deg, #2280c8 0%, #1b6ca8 100%);
+  border-color: var(--accent);
 }
 
 .welcome-action:active {
-  border-top-color: #000;
-  border-left-color: #000;
-  border-bottom-color: #ffffff;
-  border-right-color: #ffffff;
+  background: rgba(103, 193, 245, 0.22);
 }
 
 .welcome-lang-select {
   margin-top: auto;
   width: 100%;
-  background: #d8d8d8;
-  color: #000;
-  border: 2px solid #000;
-  border-top-color: #ffffff;
-  border-left-color: #ffffff;
-  border-radius: 0;
+  background: #1b2838;
+  color: var(--muted);
+  border: 1px solid var(--steam-btn-border);
+  border-radius: 3px;
   padding: 5px 4px;
-  font-size: 13px;
+  font-size: 12px;
   font-family: inherit;
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
 
 .welcome-lang-select:hover {
-  filter: brightness(1.05);
+  background: var(--steam-btn-hover-bg);
+  border-color: var(--steam-btn-hover-border);
+}
+
+.welcome-lang-select option {
+  background: #1b2838;
+  color: #c6d4df;
 }
 
 .welcome-footer {
-  padding: 6px 12px;
-  background: #d4d0c8;
-  border-top: 1px solid #888;
-  font-size: 12px;
-  color: #333;
+  padding: 7px 16px;
+  background: var(--steam-deep);
+  border-top: 1px solid rgba(103, 193, 245, 0.1);
+  font-size: 11px;
+  color: #4a5a68;
   text-align: center;
+  letter-spacing: 0.3px;
 }
 
 .welcome-modal {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1;
+  z-index: 101;
 }
 
 .welcome-modal-card {
-  background: #ffffff;
-  border: 2px solid #000;
-  box-shadow: 4px 4px 0 #000;
-  padding: 18px 24px 16px;
+  background: var(--steam-card);
+  border: 1px solid rgba(103, 193, 245, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75);
+  border-radius: 4px;
+  padding: 20px 26px 18px;
   min-width: 280px;
   max-width: 460px;
   text-align: center;
+  color: var(--fg);
 }
 
 .welcome-modal-card.guide {
@@ -590,51 +657,50 @@ select:hover {
 }
 
 .welcome-modal-card h3 {
-  margin: 0 0 10px;
-  font-size: 16px;
-  color: #000;
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: var(--accent);
+  letter-spacing: 0.5px;
 }
 
 .welcome-modal-card p {
   white-space: pre-line;
-  margin: 0 0 14px;
-  font-size: 14px;
+  margin: 0 0 16px;
+  font-size: 13px;
   line-height: 1.6;
-  color: #222;
+  color: var(--fg);
 }
 
 .welcome-modal-card button {
-  background: #d8d8d8;
-  color: #000;
-  border: 2px solid #000;
-  border-top-color: #ffffff;
-  border-left-color: #ffffff;
-  padding: 6px 24px;
-  font-size: 14px;
+  background: var(--steam-btn);
+  color: var(--fg);
+  border: 1px solid var(--steam-btn-border);
+  border-radius: 3px;
+  padding: 7px 24px;
+  font-size: 13px;
   font-family: inherit;
   cursor: pointer;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.welcome-modal-card button:active {
-  border-top-color: #000;
-  border-left-color: #000;
-  border-bottom-color: #ffffff;
-  border-right-color: #ffffff;
+.welcome-modal-card button:hover {
+  background: var(--steam-btn-hover-bg);
+  border-color: var(--steam-btn-hover-border);
+  color: #fff;
 }
 
-/* --- Config modal --- */
+/* ---- Config modal (Steam dark) ---- */
 
 #config-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.72);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', system-ui, sans-serif;
-  color: #111;
 }
 
 #config-modal[hidden] {
@@ -642,102 +708,138 @@ select:hover {
 }
 
 .config-card {
-  background: #ececec;
-  border: 2px solid #000;
-  box-shadow: 6px 6px 0 #000;
-  padding: 18px 22px 16px;
+  background: var(--steam-card);
+  border: 1px solid rgba(103, 193, 245, 0.3);
+  box-shadow: 0 0 0 1px rgba(103, 193, 245, 0.08), 0 20px 60px rgba(0, 0, 0, 0.85);
+  border-radius: 4px;
   width: 460px;
   max-width: 94vw;
   max-height: 90vh;
-  overflow: auto;
+  overflow-y: auto;
+  color: var(--fg);
 }
 
 .config-card h2 {
-  margin: 0 0 12px;
-  font-size: 16px;
+  margin: 0 0 4px;
+  padding: 11px 18px;
+  font-size: 13px;
   letter-spacing: 2px;
+  font-weight: 600;
+  color: #c6d4df;
+  background: linear-gradient(135deg, var(--steam-header-from) 0%, var(--steam-header-to) 100%);
+  border-bottom: 1px solid rgba(103, 193, 245, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.config-card h2::before {
+  content: '⚙';
+  color: var(--accent);
+  font-size: 13px;
 }
 
 .config-section {
-  margin: 0 0 10px;
+  margin: 0 18px 10px;
   padding: 6px 12px 10px;
-  background: #ffffff;
-  border: 1px solid #888;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(103, 193, 245, 0.14);
+  border-radius: 3px;
 }
 
 .config-section legend {
   padding: 0 6px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  color: #444;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
 }
 
 .config-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 6px 0;
+  margin: 7px 0;
   font-size: 13px;
+  color: var(--fg);
 }
 
 .config-row > input[type='range'] {
   flex: 1;
+  accent-color: var(--accent);
 }
 
 .config-row.checkbox {
   gap: 6px;
 }
 
+.config-row input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+}
+
 .config-value {
   min-width: 28px;
   text-align: right;
   font-variant-numeric: tabular-nums;
-  color: #333;
+  color: var(--accent);
+  font-size: 13px;
 }
 
 .config-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 12px;
+  gap: 8px;
+  margin: 4px 18px 14px;
 }
 
 .config-actions button {
-  background: #d8d8d8;
-  color: #000;
-  border: 2px solid #000;
-  border-top-color: #ffffff;
-  border-left-color: #ffffff;
-  padding: 6px 18px;
-  font-size: 14px;
+  background: var(--steam-btn);
+  color: var(--fg);
+  border: 1px solid var(--steam-btn-border);
+  border-radius: 3px;
+  padding: 7px 18px;
+  font-size: 13px;
   font-family: inherit;
   cursor: pointer;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .config-actions button.primary {
-  background: #fff4a8;
+  background: linear-gradient(180deg, #1b6ca8 0%, #145a8f 100%);
+  border-color: rgba(102, 192, 244, 0.6);
+  color: #fff;
+  font-weight: 600;
 }
 
-.config-actions button:active {
-  border-top-color: #000;
-  border-left-color: #000;
-  border-bottom-color: #ffffff;
-  border-right-color: #ffffff;
+.config-actions button:hover {
+  background: var(--steam-btn-hover-bg);
+  border-color: var(--steam-btn-hover-border);
+  color: #fff;
 }
 
-/* --- Save dialog --- */
+.config-actions button.primary:hover {
+  background: linear-gradient(180deg, #2280c8 0%, #1b6ca8 100%);
+  border-color: var(--accent);
+}
+
+/* ---- Save dialog (Steam dark) ---- */
 
 #save-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.72);
   z-index: 400;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', system-ui, sans-serif;
-  color: #111;
 }
 
 #save-modal[hidden] {
@@ -745,68 +847,100 @@ select:hover {
 }
 
 .save-card {
-  background: #ececec;
-  border: 2px solid #000;
-  box-shadow: 6px 6px 0 #000;
-  padding: 18px 22px 16px;
+  background: var(--steam-card);
+  border: 1px solid rgba(103, 193, 245, 0.3);
+  box-shadow: 0 0 0 1px rgba(103, 193, 245, 0.08), 0 20px 60px rgba(0, 0, 0, 0.85);
+  border-radius: 4px;
+  overflow: hidden;
   width: 420px;
   max-width: 94vw;
+  color: var(--fg);
 }
 
 .save-card h2 {
-  margin: 0 0 12px;
-  font-size: 16px;
+  margin: 0;
+  padding: 11px 18px;
+  font-size: 13px;
   letter-spacing: 2px;
+  font-weight: 600;
+  color: #c6d4df;
+  background: linear-gradient(135deg, var(--steam-header-from) 0%, var(--steam-header-to) 100%);
+  border-bottom: 1px solid rgba(103, 193, 245, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.save-card h2::before {
+  content: '💾';
+  font-size: 12px;
 }
 
 .save-row {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin: 0 0 14px;
+  margin: 14px 18px;
   font-size: 13px;
+  color: var(--muted);
 }
 
 .save-row input.save-name {
   font-family: 'Consolas', 'Menlo', monospace;
   font-size: 13px;
-  padding: 6px 8px;
-  border: 1px solid #888;
-  background: #fff;
-  color: #111;
+  padding: 7px 10px;
+  border: 1px solid rgba(103, 193, 245, 0.25);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--fg);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.save-row input.save-name:focus {
+  border-color: var(--accent);
+  background: rgba(102, 192, 244, 0.05);
 }
 
 .save-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
+  margin: 0 18px 16px;
 }
 
 .save-actions button {
-  background: #d8d8d8;
-  color: #000;
-  border: 2px solid #000;
-  border-top-color: #ffffff;
-  border-left-color: #ffffff;
-  padding: 6px 18px;
-  font-size: 14px;
+  background: var(--steam-btn);
+  color: var(--fg);
+  border: 1px solid var(--steam-btn-border);
+  border-radius: 3px;
+  padding: 7px 18px;
+  font-size: 13px;
   font-family: inherit;
   cursor: pointer;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .save-actions button.primary {
-  background: #fff4a8;
+  background: linear-gradient(180deg, #1b6ca8 0%, #145a8f 100%);
+  border-color: rgba(102, 192, 244, 0.6);
+  color: #fff;
+  font-weight: 600;
 }
 
-.save-actions button:active {
-  border-top-color: #000;
-  border-left-color: #000;
-  border-bottom-color: #ffffff;
-  border-right-color: #ffffff;
+.save-actions button:hover {
+  background: var(--steam-btn-hover-bg);
+  border-color: var(--steam-btn-hover-border);
+  color: #fff;
 }
 
-/* --- Map editor --- */
+.save-actions button.primary:hover {
+  background: linear-gradient(180deg, #2280c8 0%, #1b6ca8 100%);
+  border-color: var(--accent);
+}
+
+/* ---- Map editor (Steam dark) ---- */
 
 #editor-modal {
   position: fixed;
@@ -817,33 +951,45 @@ select:hover {
   align-items: center;
   justify-content: center;
   font-family: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', system-ui, sans-serif;
-  color: #111;
 }
 
 .editor-card {
-  background: #ececec;
-  border: 2px solid #000;
-  box-shadow: 6px 6px 0 #000;
+  background: var(--steam-card);
+  border: 1px solid rgba(103, 193, 245, 0.3);
+  box-shadow: 0 0 0 1px rgba(103, 193, 245, 0.08), 0 20px 60px rgba(0, 0, 0, 0.85);
+  border-radius: 4px;
+  overflow: hidden;
   width: min(1100px, 96vw);
   max-height: 94vh;
   display: flex;
   flex-direction: column;
+  color: var(--fg);
 }
 
 .editor-titlebar {
-  background: linear-gradient(to right, #000a8c, #2848c4);
-  color: #fff;
-  padding: 6px 12px;
-  font-size: 14px;
+  background: linear-gradient(135deg, var(--steam-header-from) 0%, var(--steam-header-to) 100%);
+  color: #c6d4df;
+  padding: 10px 14px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(103, 193, 245, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.editor-titlebar::before {
+  content: '🗺';
+  font-size: 12px;
 }
 
 .editor-layout {
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
-  background: #ececec;
+  background: var(--steam-card);
 }
 
 .editor-canvas-wrap {
@@ -860,38 +1006,44 @@ select:hover {
   height: 100%;
   min-height: 360px;
   background: #0e1115;
-  border: 1px solid #888;
+  border: 1px solid rgba(103, 193, 245, 0.2);
+  border-radius: 3px;
   outline: none;
   cursor: crosshair;
+  transition: border-color 0.15s;
 }
 
 .editor-canvas:focus {
-  border-color: #2848c4;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(102, 192, 244, 0.2);
 }
 
 .editor-sidebar {
   flex: 0 0 240px;
   padding: 10px 12px 12px;
-  border-left: 1px solid #888;
-  background: #f4f4f4;
+  border-left: 1px solid rgba(103, 193, 245, 0.12);
+  background: var(--steam-panel);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   overflow-y: auto;
 }
 
 .editor-section {
   margin: 0;
   padding: 6px 10px 10px;
-  background: #fff;
-  border: 1px solid #888;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(103, 193, 245, 0.14);
+  border-radius: 3px;
 }
 
 .editor-section legend {
   padding: 0 6px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  color: #444;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
 }
 
 .editor-wall-row {
@@ -899,59 +1051,64 @@ select:hover {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin: 4px 0;
+  margin: 5px 0;
   font-size: 13px;
-  color: #222;
+  color: var(--fg);
 }
 
 .editor-wall-row select {
-  background: #fff;
-  color: #111;
-  border: 1px solid #888;
-  border-radius: 0;
-  padding: 2px 6px;
+  background: var(--steam-btn);
+  color: var(--fg);
+  border: 1px solid var(--steam-btn-border);
+  border-radius: 3px;
+  padding: 3px 6px;
   font: inherit;
+  transition: border-color 0.15s;
+}
+
+.editor-wall-row select:hover {
+  border-color: var(--steam-btn-hover-border);
 }
 
 .editor-tool-btn {
   display: block;
   width: 100%;
-  margin: 4px 0;
-  background: #d8d8d8;
-  color: #000;
-  border: 2px solid #000;
-  border-top-color: #ffffff;
-  border-left-color: #ffffff;
-  padding: 6px 10px;
+  margin: 3px 0;
+  background: var(--steam-btn);
+  color: var(--muted);
+  border: 1px solid var(--steam-btn-border);
+  border-radius: 3px;
+  padding: 7px 10px;
   font-size: 13px;
   font-family: inherit;
   cursor: pointer;
   text-align: left;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .editor-tool-btn:hover {
-  filter: brightness(1.05);
+  background: var(--steam-btn-hover-bg);
+  border-color: var(--steam-btn-hover-border);
+  color: #fff;
 }
 
 .editor-tool-btn.selected {
-  background: #fff4a8;
-  border-top-color: #000;
-  border-left-color: #000;
-  border-bottom-color: #ffffff;
-  border-right-color: #ffffff;
+  background: rgba(102, 192, 244, 0.18);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .editor-hint {
   font-size: 12px;
-  color: #333;
+  color: var(--muted);
   line-height: 1.4;
   min-height: 1.4em;
 }
 
 .editor-error {
   font-size: 12px;
-  color: #aa0000;
+  color: #ff6b5a;
   font-weight: 600;
   min-height: 1.4em;
 }
@@ -964,32 +1121,38 @@ select:hover {
 }
 
 .editor-actions button {
-  background: #d8d8d8;
-  color: #000;
-  border: 2px solid #000;
-  border-top-color: #ffffff;
-  border-left-color: #ffffff;
-  padding: 6px 12px;
+  background: var(--steam-btn);
+  color: var(--fg);
+  border: 1px solid var(--steam-btn-border);
+  border-radius: 3px;
+  padding: 7px 12px;
   font-size: 13px;
   font-family: inherit;
   cursor: pointer;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .editor-actions button.primary {
-  background: #fff4a8;
+  background: linear-gradient(180deg, #1b6ca8 0%, #145a8f 100%);
+  border-color: rgba(102, 192, 244, 0.6);
+  color: #fff;
+  font-weight: 600;
 }
 
-.editor-actions button:active {
-  border-top-color: #000;
-  border-left-color: #000;
-  border-bottom-color: #ffffff;
-  border-right-color: #ffffff;
+.editor-actions button:hover {
+  background: var(--steam-btn-hover-bg);
+  border-color: var(--steam-btn-hover-border);
+  color: #fff;
 }
 
-/* --- Mobile responsive --- */
+.editor-actions button.primary:hover {
+  background: linear-gradient(180deg, #2280c8 0%, #1b6ca8 100%);
+  border-color: var(--accent);
+}
 
-/* Narrow hud on phone landscape (short screen) */
+/* ---- Mobile responsive ---- */
+
 @media (max-height: 500px) {
   #hud {
     flex: 0 0 150px;

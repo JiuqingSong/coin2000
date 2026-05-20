@@ -14,7 +14,11 @@
       "Bash(npm run *)",
       "Bash(curl -sS http://localhost:5175/)",
       "Bash(curl -sS http://localhost:5175/src/i18n.ts)",
-      "Bash(curl -sS http://localhost:5176/src/game/maps.ts)"
+      "Bash(curl -sS http://localhost:5176/src/game/maps.ts)",
+      "Bash(Get-ChildItem -Path \"D:\\\\coin2000\" -Force)",
+      "Bash(Select-Object Name, FullName, Mode)",
+      "Bash(Start-Process *)",
+      "PowerShell(Start-Process \"http://localhost:5173/\")"
     ]
   }
 }
