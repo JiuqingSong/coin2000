@@ -327,6 +327,22 @@ music.subscribe((on) => chrome.setMusicOn(on));
 const configDialog = mountConfig(document.body);
 const saveDialog = mountSaveDialog(document.body);
 
+const isTauri = () => !!(window as any).__TAURI_INTERNALS__;
+
+// In Tauri: skip the HTML dialog and jump straight to the native OS save dialog
+// with the default name pre-filled. In web: show the HTML filename dialog first.
+const saveWithDialog = (
+  defaultName: string,
+  extension: string,
+  onSave: (name: string) => Promise<void>,
+) => {
+  if (isTauri()) {
+    void onSave(defaultName);
+  } else {
+    saveDialog.open({ defaultName, extension, onSave });
+  }
+};
+
 const welcomeOpts = {
   onStart: () => {
     welcome?.hide();
@@ -394,12 +410,8 @@ const openEditor = (initialMap: MapData) => {
         createdAt: new Date().toISOString(),
         map,
       };
-      saveDialog.open({
-        defaultName: filename,
-        extension: MAP_FILE_EXT,
-        onSave: (name) => {
-          downloadAsFile(sanitizeFileName(name, MAP_FILE_EXT), serializeMapFile(file));
-        },
+      saveWithDialog(filename, MAP_FILE_EXT, async (name) => {
+        await downloadAsFile(sanitizeFileName(name, MAP_FILE_EXT), serializeMapFile(file));
       });
     },
     onTestMap: (map) => {
@@ -444,22 +456,18 @@ const openSaveDialog = () => {
   // If the game was continued from a replay, prepend the already-played shots
   // so the saved file replays the full game from the beginning.
   const shots = [...replayBaseShots, ...recordedShots];
-  saveDialog.open({
-    defaultName: defaultSaveFileName(),
-    extension: REPLAY_FILE_EXT,
-    onSave: (name) => {
-      const file: SaveFile = {
-        app: SAVE_FILE_APP,
-        version: SAVE_FILE_VERSION,
-        createdAt: new Date().toISOString(),
-        map: engine.getCurrentMap(),
-        config: { ...config },
-        p2Mode,
-        shots,
-        result,
-      };
-      downloadAsFile(sanitizeFileName(name, REPLAY_FILE_EXT), serializeSaveFile(file));
-    },
+  saveWithDialog(defaultSaveFileName(), REPLAY_FILE_EXT, async (name) => {
+    const file: SaveFile = {
+      app: SAVE_FILE_APP,
+      version: SAVE_FILE_VERSION,
+      createdAt: new Date().toISOString(),
+      map: engine.getCurrentMap(),
+      config: { ...config },
+      p2Mode,
+      shots,
+      result,
+    };
+    await downloadAsFile(sanitizeFileName(name, REPLAY_FILE_EXT), serializeSaveFile(file));
   });
 };
 

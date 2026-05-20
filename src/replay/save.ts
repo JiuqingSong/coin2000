@@ -26,14 +26,21 @@ export function sanitizeFileName(raw: string, ext: string = REPLAY_FILE_EXT): st
   return name;
 }
 
-export function downloadAsFile(name: string, contents: string): void {
-  const blob = new Blob([contents], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  document.body.append(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+export async function downloadAsFile(name: string, contents: string): Promise<void> {
+  if ((window as any).__TAURI_INTERNALS__) {
+    const { save } = await import('@tauri-apps/plugin-dialog');
+    const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+    const path = await save({ defaultPath: name });
+    if (path) await writeTextFile(path, contents);
+  } else {
+    const blob = new Blob([contents], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
 }

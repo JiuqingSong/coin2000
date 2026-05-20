@@ -21,7 +21,10 @@
       "PowerShell(Start-Process \"http://localhost:5173/\")",
       "Bash(rustc --version)",
       "Bash(cargo --version)",
-      "PowerShell(rustc *)"
+      "PowerShell(rustc *)",
+      "Read(//mnt/d/coin2000/**)",
+      "Bash(cargo add *)",
+      "PowerShell(& \"$env:USERPROFILE\\\\.cargo\\\\bin\\\\cargo.exe\" add tauri-plugin-dialog tauri-plugin-fs 2>&1 | Select-Object -First 20)"
     ]
   }
 }
