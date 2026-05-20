@@ -20,6 +20,14 @@ export interface PhysicsEvents {
   onExplode?(bomb: Coin): void;
 }
 
+function recordFirstHit(world: World, shooter: Coin, other: Coin | null): void {
+  world.shooterFirstHitOpponent =
+    other !== null &&
+    ((shooter.owner === Owner.P1 && other.owner === Owner.P2) ||
+     (shooter.owner === Owner.P2 && other.owner === Owner.P1));
+  world.shooterCoin = null;
+}
+
 export function step(world: World, events?: PhysicsEvents): void {
   const coins = world.coins;
   const prev: Array<{ x: number; y: number }> = new Array(coins.length);
@@ -77,6 +85,8 @@ export function step(world: World, events?: PhysicsEvents): void {
         if (aHole && bHole) continue;
         const hole = aHole ? a : b;
         const victim = aHole ? b : a;
+        if (world.shooterCoin !== null && victim === world.shooterCoin)
+          recordFirstHit(world, victim, hole);
         dropIntoHole(world, hole, victim, events);
         continue;
       }
@@ -91,6 +101,8 @@ export function step(world: World, events?: PhysicsEvents): void {
         if (aTree && bTree) continue; // two trees overlapping — placement bug
         const tree = aTree ? a : b;
         const mover = aTree ? b : a;
+        if (world.shooterCoin !== null && mover === world.shooterCoin)
+          recordFirstHit(world, mover, tree);
         resolveStaticCircle(tree, mover);
         events?.onCollide?.(a, b);
         continue;
@@ -105,6 +117,10 @@ export function step(world: World, events?: PhysicsEvents): void {
         if (a.vel.x === 0 && a.vel.y === 0 && b.vel.x === 0 && b.vel.y === 0) continue;
         const bomb = aBomb ? a : b;
         const trigger = aBomb ? b : a;
+        if (world.shooterCoin !== null) {
+          if (trigger === world.shooterCoin) recordFirstHit(world, trigger, bomb);
+          else if (bomb === world.shooterCoin) recordFirstHit(world, bomb, trigger);
+        }
         triggerExplosion(world, bomb, trigger, events);
         continue;
       }
@@ -115,6 +131,10 @@ export function step(world: World, events?: PhysicsEvents): void {
       a.pos.y = pa.y;
       b.pos.x = pb.x;
       b.pos.y = pb.y;
+      if (world.shooterCoin !== null) {
+        if (a === world.shooterCoin) recordFirstHit(world, a, b);
+        else if (b === world.shooterCoin) recordFirstHit(world, b, a);
+      }
       resolveCollision(a, b);
       events?.onCollide?.(a, b);
     }
@@ -140,6 +160,8 @@ export function step(world: World, events?: PhysicsEvents): void {
       // Velocity is intentionally preserved — step 1 keeps the piece gliding
       // past the wall (decayed each tick) so it looks like it falls beyond
       // the edge rather than stopping dead at the kill line.
+      if (world.shooterCoin !== null && c === world.shooterCoin)
+        recordFirstHit(world, c, null);
       c.alive = false;
       c.dropping = {
         ticksLeft: DROP_TICKS,
@@ -221,12 +243,16 @@ export function step(world: World, events?: PhysicsEvents): void {
         c.pos.x = savedX;
         c.pos.y = savedY;
         teleportBlocked = true;
+        if (world.shooterCoin !== null && c === world.shooterCoin)
+          recordFirstHit(world, c, other);
       }
     }
 
     if (actionY === 'teleport' && !teleportBlocked) {
       c.pos.y = targetY;
     } else if (actionY === 'bounce') {
+      if (world.shooterCoin !== null && c === world.shooterCoin)
+        recordFirstHit(world, c, null);
       c.pos.y = p.y;
       c.vel.y = -c.vel.y;
     } else if (actionY === 'teleport') {
@@ -237,6 +263,8 @@ export function step(world: World, events?: PhysicsEvents): void {
     if (actionX === 'teleport' && !teleportBlocked) {
       c.pos.x = targetX;
     } else if (actionX === 'bounce') {
+      if (world.shooterCoin !== null && c === world.shooterCoin)
+        recordFirstHit(world, c, null);
       c.pos.x = p.x;
       c.vel.x = -c.vel.x;
     } else if (actionX === 'teleport') {

@@ -194,6 +194,8 @@ export class Engine {
     this.shooter = this.world.current;
     this.preShotP1 = this.world.aliveCount[Owner.P1];
     this.preShotP2 = this.world.aliveCount[Owner.P2];
+    this.world.shooterCoin = c;
+    this.world.shooterFirstHitOpponent = false;
     c.vel = { x: vel.x, y: vel.y };
     this.world.phase = Phase.Simulating;
     this.opts.bell?.ringShoot();
@@ -205,6 +207,9 @@ export class Engine {
     const shooter = this.shooter;
     const killedP1 = this.preShotP1 - this.world.aliveCount[Owner.P1];
     const killedP2 = this.preShotP2 - this.world.aliveCount[Owner.P2];
+    const firstHitOpponent = this.world.shooterFirstHitOpponent;
+    this.world.shooterCoin = null;
+    this.world.shooterFirstHitOpponent = false;
 
     if (shooter !== null) {
       this.opts.onTurnSettled?.({ shooter, killedP1, killedP2 });
@@ -224,7 +229,8 @@ export class Engine {
       shooter !== null &&
       config.keepShotOnKill &&
       enemyKilled > 0 &&
-      ownKilled === 0;
+      ownKilled === 0 &&
+      firstHitOpponent;
 
     if (!keepShot) {
       this.world.current = this.world.current === Owner.P1 ? Owner.P2 : Owner.P1;

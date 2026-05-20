@@ -52,5 +52,7 @@ export function worldFromMapData(data: MapData): World {
       [Owner.P2]: p2,
       [Owner.Neutral]: neutral,
     },
+    shooterCoin: null,
+    shooterFirstHitOpponent: false,
   };
 }
