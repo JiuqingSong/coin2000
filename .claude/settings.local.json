@@ -24,7 +24,10 @@
       "PowerShell(rustc *)",
       "Read(//mnt/d/coin2000/**)",
       "Bash(cargo add *)",
-      "PowerShell(& \"$env:USERPROFILE\\\\.cargo\\\\bin\\\\cargo.exe\" add tauri-plugin-dialog tauri-plugin-fs 2>&1 | Select-Object -First 20)"
+      "PowerShell(& \"$env:USERPROFILE\\\\.cargo\\\\bin\\\\cargo.exe\" add tauri-plugin-dialog tauri-plugin-fs 2>&1 | Select-Object -First 20)",
+      "Bash(Get-ChildItem -Path \"D:\\\\coin2000\" -Recurse -Filter \"*i18n*\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(npx tsc *)"
     ]
   }
 }

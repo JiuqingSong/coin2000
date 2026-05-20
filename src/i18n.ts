@@ -1,6 +1,6 @@
-export type Locale = 'zh' | 'en' | 'ja';
+export type Locale = 'zh' | 'en' | 'ja' | 'es';
 
-const LOCALE_CYCLE: readonly Locale[] = ['zh', 'en', 'ja'];
+const LOCALE_CYCLE: readonly Locale[] = ['zh', 'en', 'ja', 'es'];
 
 const STORAGE_KEY = 'coin2026.locale.v1';
 
@@ -12,7 +12,7 @@ let currentLocale: Locale = detectInitial();
 function detectInitial(): Locale {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'zh' || stored === 'en' || stored === 'ja') return stored;
+    if (stored === 'zh' || stored === 'en' || stored === 'ja' || stored === 'es') return stored;
   } catch {
     // ignore
   }
@@ -22,6 +22,7 @@ function detectInitial(): Locale {
       : '';
   if (nav.startsWith('zh')) return 'zh';
   if (nav.startsWith('ja')) return 'ja';
+  if (nav.startsWith('es')) return 'es';
   return 'en';
 }
 
@@ -57,7 +58,7 @@ export function subscribeLocale(fn: Listener): () => void {
 export function applyDocumentLocale(): void {
   if (typeof document === 'undefined') return;
   document.documentElement.lang =
-    currentLocale === 'zh' ? 'zh-CN' : currentLocale === 'ja' ? 'ja' : 'en';
+    currentLocale === 'zh' ? 'zh-CN' : currentLocale === 'ja' ? 'ja' : currentLocale === 'es' ? 'es' : 'en';
   document.title = t('app.title');
 }
 
@@ -500,15 +501,15 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'chrome.music.off': '🔇 音楽',
   'chrome.music.title.on': 'BGMをオフ',
   'chrome.music.title.off': 'BGMをオン',
-  'chrome.lang.toggle': '中',
-  'chrome.lang.toggle.title': '切换到中文',
+  'chrome.lang.toggle': 'ES',
+  'chrome.lang.toggle.title': 'Cambiar a español',
 
   // welcome screen
   'welcome.titlebar': '',
   'welcome.tool.guide': '遊び方',
   'welcome.tool.settings': '設定',
   'welcome.tool.about': '情報',
-  'welcome.tool.lang': '中',
+  'welcome.tool.lang': 'ES',
   'welcome.signature': '作者: Songthin',
   'welcome.action.start': '開始',
   'welcome.action.replay': 'リプレイ',
@@ -687,12 +688,214 @@ const JA_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
   'editor.error.overlap': '駒が重なっています。位置を調整してください。',
 };
 
+const ES_STRINGS: Record<keyof typeof ZH_STRINGS, string> = {
+  'app.title': 'COIN 2026 · Lanzamiento de Monedas',
+
+  // chrome (top bar)
+  'chrome.opponent': 'Rival',
+  'chrome.p2.ai': 'Computadora',
+  'chrome.p2.human': 'Jugador',
+  'chrome.map': 'Mapa',
+  'chrome.restart': 'Reiniciar',
+  'chrome.backToEditor': 'Volver al editor',
+  'chrome.backToWelcome': 'Volver al menú',
+  'chrome.music.on': '♪ Música',
+  'chrome.music.off': '🔇 Música',
+  'chrome.music.title.on': 'Apagar música',
+  'chrome.music.title.off': 'Encender música',
+  'chrome.lang.toggle': '中',
+  'chrome.lang.toggle.title': '切换到中文',
+
+  // welcome screen
+  'welcome.titlebar': '',
+  'welcome.tool.guide': 'Guía',
+  'welcome.tool.settings': 'Ajustes',
+  'welcome.tool.about': 'Acerca de',
+  'welcome.tool.lang': '中',
+  'welcome.signature': 'Por Songthin',
+  'welcome.action.start': 'Iniciar',
+  'welcome.action.replay': 'Repetición',
+  'welcome.action.editor': 'Editor de mapas',
+  'welcome.action.loadMap': 'Cargar mapa',
+  'welcome.map.heading': 'Mapa',
+  'welcome.map.custom': 'Personalizado',
+  'welcome.footer': 'Software gratuito — compártelo. Mayo 2026',
+  'welcome.modal.back': 'Volver',
+  'welcome.about.title': 'Acerca de',
+  'welcome.about.body': 'COIN 2026\nPor Songthin\nVersión para navegador · 2026',
+  'welcome.replay.title': 'Repetición',
+  'welcome.replay.body': 'Aún no implementado.',
+  'welcome.guide.title': 'Cómo jugar',
+  'welcome.guide.body':
+    '■ Objetivo\nElimina todas las monedas del rival para ganar. Si te quedas sin monedas primero, pierdes.\n\n' +
+    '■ Controles\n' +
+    '• Pasa el cursor sobre una de tus monedas — se ilumina cuando es seleccionable.\n' +
+    '• Arrastra la moneda en dirección opuesta a donde quieres que vuele, luego suelta.\n' +
+    '• Más largo el arrastre = tiro más fuerte; la flecha muestra dirección y fuerza.\n' +
+    '• Presiona Esc o clic derecho mientras arrastras para cancelar y elegir otra moneda.\n\n' +
+    '■ Piezas\n' +
+    '• Monedas (1 y 2): tu equipo y el del rival — elimínalos a todos para ganar.\n' +
+    '• Piedras: piezas neutras pesadas. Bloquean caminos y rebotan tiros; nunca caen.\n' +
+    '• Bombas: explotan al contacto. Todo en el radio de explosión es destruido.\n\n' +
+    '■ Paredes\n' +
+    '• Paredes de piedra: rebotan las monedas de vuelta al juego.\n' +
+    '• Línea roja: el borde de la mesa — las piezas que cruzan la línea caen para siempre.\n\n' +
+    '■ Turnos\n' +
+    'Los jugadores se alternan. Por defecto, si tu tiro elimina al menos una moneda rival sin perder ninguna propia, conservas el turno; de lo contrario pasa al rival (esta regla puede desactivarse en Ajustes).\n\n' +
+    '■ Bombas\n' +
+    'Una bomba explota en el instante en que una pieza en movimiento la toca. La explosión destruye todas las monedas dentro del radio. Con "Explosiones en cadena" activado, una bomba puede detonar otras cercanas.\n\n' +
+    '■ Consejos\n' +
+    '• Usa las paredes laterales para hacer rebotes alrededor de las piedras.\n' +
+    '• Empuja a los rivales hacia la línea roja, no solo contra las piedras.\n' +
+    '• Las bombas también dañan tus propias monedas — mantenlas lejos.',
+
+  // HUD
+  'hud.count.p1': 'Tú',
+  'hud.count.p2.ai': 'CPU',
+  'hud.count.p2.human': 'J2',
+  'hud.playAgain': 'Jugar de nuevo',
+  'hud.saveReplay': 'Guardar repetición',
+  'hud.backToWelcome': 'Volver al menú',
+  'hud.replay.pause': 'Pausar',
+  'hud.replay.resume': 'Reanudar',
+  'hud.replay.step': 'Paso',
+  'hud.replay.continueFromHere': 'Continuar desde aquí',
+  'hud.replayAgain': 'Ver de nuevo',
+  'hud.loadReplay': 'Cargar repetición',
+  'hud.winner.draw': 'Empate',
+  'hud.winner.p1': 'Ganaste',
+  'hud.winner.p2.ai': 'Gana la CPU',
+  'hud.winner.p2.human': 'Gana el rival',
+  'hud.pill.idle': 'Preparando',
+  'hud.pill.p1Turn': 'Tu turno',
+  'hud.pill.aiTurn': 'Turno de la CPU',
+  'hud.pill.humanTurn': 'Turno del rival',
+  'hud.pill.simulating': 'En movimiento…',
+  'hud.pill.roundEnd': 'Ronda terminada',
+  'hud.status.p1Aim': 'Arrastra tu moneda para apuntar, suelta para disparar.',
+  'hud.status.aiThinking': 'La computadora está pensando…',
+  'hud.status.humanAim': 'Arrastra la moneda del rival para apuntar, suelta para disparar.',
+  'hud.status.simulating': 'Monedas en movimiento.',
+  'hud.status.roundEnd': 'Ronda terminada.',
+
+  // game info panel
+  'hud.info.heading': 'Ajustes',
+  'hud.info.p1Coins': 'Monedas J1',
+  'hud.info.p2Coins': 'Monedas J2',
+  'hud.info.stones': 'Piedras',
+  'hud.info.bombs': 'Bombas',
+  'hud.info.holes': 'Agujeros',
+  'hud.info.trees': 'Árboles',
+  'hud.info.coinRadius': 'Radio moneda',
+  'hud.info.coinMass': 'Masa moneda',
+  'hud.info.maxSpeed': 'Vel. máxima',
+  'hud.info.aiDifficulty': 'Nivel IA',
+  'hud.info.keepShotOnKill': 'Turno extra',
+  'hud.info.explosionRadius': 'Radio explos.',
+  'hud.info.on': 'Sí',
+  'hud.info.off': 'No',
+
+  // config dialog
+  'config.title': 'Ajustes',
+  'config.section.colors': 'Colores',
+  'config.label.p1Color': 'Moneda jugador',
+  'config.label.p2Color': 'Moneda computadora',
+  'config.section.coins': 'Monedas',
+  'config.label.coinsPerSide': 'Monedas por lado',
+  'config.label.coinRadius': 'Radio de moneda',
+  'config.label.coinMass': 'Masa de moneda',
+  'config.section.gameplay': 'Jugabilidad',
+  'config.label.maxShotSpeed': 'Vel. máx. de tiro',
+  'config.label.aiDifficulty': 'Dificultad IA',
+  'config.label.keepShotOnKill': 'Turno extra al eliminar',
+  'config.section.pieces': 'Piedras y bombas',
+  'config.label.stoneCount': 'Cantidad de piedras',
+  'config.label.bombCount': 'Cantidad de bombas',
+  'config.label.treeCount': 'Cantidad de árboles',
+  'config.label.explosionRadius': 'Radio de explosión',
+  'config.label.chainBombs': 'Explosiones en cadena',
+  'config.label.misfireProtection': 'Protección accidental',
+  'config.section.other': 'Otros',
+  'config.label.sound': 'Efectos de sonido',
+  'config.btn.ok': 'Aceptar',
+  'config.btn.cancel': 'Cancelar',
+  'config.btn.reset': 'Restaurar valores',
+
+  // maps
+  'map.classic.name': 'Clásico',
+  'map.classic.desc': 'Monedas a cada lado, piedras en el centro; bordes superior e inferior son mortales.',
+  'map.allSides.name': 'Precipicios',
+  'map.allSides.desc': 'Los cuatro bordes son mortales — los tiros descuidados lanzarán tus monedas al vacío.',
+  'map.fortified.name': 'Fortificado',
+  'map.fortified.desc': 'Las piedras flanquean a cada jugador como barrera defensiva en vez de estar al centro.',
+  'map.crossed.name': 'Cruzado',
+  'map.crossed.desc': 'Las monedas se alinean arriba y abajo; los bordes izquierdo y derecho son la zona de muerte.',
+
+  // save / load
+  'save.title': 'Guardar repetición',
+  'save.filename': 'Nombre de archivo',
+  'save.btn.save': 'Guardar',
+  'save.btn.cancel': 'Cancelar',
+  'save.error.title': 'No se pudo cargar la repetición',
+  'save.error.badJson': 'El archivo no es JSON válido.',
+  'save.error.badShape': 'La estructura del archivo es inesperada.',
+  'save.error.wrongApp': 'Este no es un archivo de repetición de COIN 2026.',
+  'save.error.wrongKind': 'Selecciona un archivo .replay.coin.',
+  'save.error.wrongVersion': 'Esta versión de repetición no está soportada.',
+  'save.error.badMap': 'Los datos del mapa en la repetición faltan o están dañados.',
+  'save.error.badConfig': 'Los datos de ajustes en la repetición faltan o están dañados.',
+  'save.error.badShots': 'La lista de tiros en la repetición falta o está dañada.',
+  'save.error.badResult': 'Los datos del resultado en la repetición faltan o están dañados.',
+
+  // map file errors
+  'mapfile.error.title': 'No se pudo cargar el mapa',
+  'mapfile.error.badJson': 'El archivo no es JSON válido.',
+  'mapfile.error.badShape': 'La estructura del archivo es inesperada.',
+  'mapfile.error.wrongApp': 'Este no es un archivo de mapa de COIN 2026.',
+  'mapfile.error.wrongKind': 'Este es un archivo de repetición, no un mapa.',
+  'mapfile.error.wrongVersion': 'Esta versión del mapa no está soportada.',
+  'mapfile.error.badMap': 'Los datos del mapa faltan o están dañados.',
+
+  // map editor
+  'editor.title': 'Editor de mapas',
+  'editor.section.walls': 'Paredes',
+  'editor.wall.top': 'Arriba',
+  'editor.wall.bottom': 'Abajo',
+  'editor.wall.left': 'Izquierda',
+  'editor.wall.right': 'Derecha',
+  'editor.wall.kill': 'Muerte',
+  'editor.wall.bounce': 'Rebote',
+  'editor.wall.teleport': 'Teletransporte',
+  'editor.section.tools': 'Herramientas',
+  'editor.tool.select': 'Seleccionar / Mover',
+  'editor.tool.p1': 'Moneda jugador',
+  'editor.tool.p2': 'Moneda rival',
+  'editor.tool.stone': 'Piedra',
+  'editor.tool.bomb': 'Bomba',
+  'editor.tool.tree': 'Árbol',
+  'editor.tool.hole': 'Agujero',
+  'editor.tool.erase': 'Borrar',
+  'editor.section.actions': 'Acciones',
+  'editor.btn.load': 'Cargar mapa',
+  'editor.btn.clear': 'Limpiar',
+  'editor.btn.save': 'Guardar',
+  'editor.btn.test': 'Probar',
+  'editor.btn.close': 'Cerrar',
+  'editor.hint.select': 'Clic para seleccionar, arrastrar para mover, Supr para eliminar.',
+  'editor.hint.place': 'Clic en espacio vacío para colocar una pieza.',
+  'editor.hint.erase': 'Clic en una pieza para eliminarla.',
+  'editor.error.noP1': 'Se necesita al menos 1 moneda de jugador.',
+  'editor.error.noP2': 'Se necesita al menos 1 moneda de rival.',
+  'editor.error.overlap': 'Hay piezas superpuestas — sepáralas.',
+};
+
 export type StringKey = keyof typeof ZH_STRINGS;
 
 const STRINGS: Record<Locale, StringDict> = {
   zh: ZH_STRINGS,
   en: EN_STRINGS,
   ja: JA_STRINGS,
+  es: ES_STRINGS,
 };
 
 // ---------------------------------------------------------------------------
@@ -901,10 +1104,81 @@ const JA_ARRAYS: Record<keyof typeof ZH_ARRAYS, readonly string[]> = {
   ],
 };
 
+const ES_ARRAYS: Record<keyof typeof ZH_ARRAYS, readonly string[]> = {
+  'banter.p1': [
+    '¡Brillante! Eliminaste todas las monedas — ¡victoria total!',
+    'Ganaste. Está bien, hoy la computadora te deja ganar.',
+    'La computadora está limpia. Realmente eres bueno.',
+    'Victoria completa. Hasta la próxima.',
+  ],
+  'banter.p2': [
+    'Sin monedas. Hay que ganar y perder — siempre hay una próxima.',
+    '¡Eliminado! ¡Esfuérzate más en la siguiente ronda!',
+    'Qué se le va a hacer — la computadora es muy buena.',
+    'Entrega las correcciones mañana.',
+  ],
+  'banter.draw': [
+    'Destrucción mutua.',
+    'No hay sobrevivientes en la mesa.',
+    'Empate — ambos lados eliminados.',
+  ],
+
+  'reactions.humanAiming': [
+    '¿A quién le va a pegar? ¿Cuál es tu lectura?',
+    '¡No adivines — piénsalo bien!',
+    '¡Haz un análisis honesto!',
+  ],
+  'reactions.humanKilledOwn': [
+    '¿De verdad hiciste el análisis?',
+    '¡Como un toro en una cristalería!',
+    'Entrega la corrección mañana.',
+  ],
+  'reactions.humanNothing': [
+    '¡Fallaste!',
+    '¡Tu lectura — equivocada!',
+    '¿Adivinando de nuevo?',
+    'Tarde o temprano tendrás que aprender.',
+    '¡Intenta una estrategia real esta vez!',
+    'Una y otra vez, lo mismo.',
+  ],
+  'reactions.humanKilledEnemy': [
+    '¡Te lo dije — tu lectura fue perfecta!',
+    '¡Sí! Ese es exactamente el tiro que esperaba.',
+    '¡Ay, qué crueldad — sin piedad!',
+    '¡Lo logré! ¡Lo logré!',
+    'El fútbol es para la calle; las monedas son para el salón.',
+  ],
+  'reactions.aiThinking': [
+    'Déjame pensar…',
+    'Perdón, dame un momento…',
+    'Lee el libro de texto mientras salgo un segundo…',
+    'Pienso a la izquierda cinco segundos, pausa dos; a la derecha cinco, pausa dos.',
+  ],
+  'reactions.aiShooting': [
+    '¡Creo que este es el tiro!',
+    'En un instante, desapareces.',
+    '¡Adelante — un paso, dos movimientos!',
+    'Mira cómo tus monedas toman caminos distintos.',
+    'Mi mejor tiro siempre es el próximo.',
+  ],
+  'reactions.aiTestShot': [
+    'Solo probando tus nervios.',
+    'Un buen jugador necesita esta fortaleza mental.',
+    'Solo me estoy divirtiendo.',
+  ],
+  'reactions.aiKilledP1': [
+    '¡Caíste de nuevo!',
+    'Necesitas entender mis intenciones.',
+    '¡Mis monedas son perfectamente redondas!',
+    '¡Ese tiro tuvo estilo!',
+  ],
+};
+
 export type ArrayKey = keyof typeof ZH_ARRAYS;
 
 const ARRAYS: Record<Locale, ArrayDict> = {
   zh: ZH_ARRAYS,
   en: EN_ARRAYS,
   ja: JA_ARRAYS,
+  es: ES_ARRAYS,
 };
