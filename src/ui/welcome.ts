@@ -216,6 +216,13 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
       a.className = 'welcome-modal-link';
+      a.addEventListener('click', async e => {
+        if ((window as any).__TAURI_INTERNALS__) {
+          e.preventDefault();
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('open_url', { url: m.link });
+        }
+      });
       card.append(a);
     }
     if (m.closable) {

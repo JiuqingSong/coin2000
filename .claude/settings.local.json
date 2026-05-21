@@ -40,7 +40,8 @@
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('deps:', d.get\\('dependencies',{}\\)\\); print\\('optional:', d.get\\('optionalDependencies',{}\\)\\)\")",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(Select-String -Pattern \"tauri\")"
     ]
   }
 }
