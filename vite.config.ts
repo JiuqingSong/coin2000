@@ -4,6 +4,9 @@ import { defineConfig } from 'vite';
 // including GitHub Pages (https://<user>.github.io/coin2026/).
 export default defineConfig({
   base: './',
+  define: {
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
+  },
   build: {
     target: 'es2022',
     outDir: 'dist',

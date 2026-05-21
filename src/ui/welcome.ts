@@ -1,3 +1,5 @@
+declare const __BUILD_DATE__: string;
+
 import { getLocale, setLocale, subscribeLocale, t, type Locale, type StringKey } from '../i18n';
 import {
   MAPS,
@@ -30,10 +32,12 @@ interface ModalConfig {
   bodyKey?: StringKey;
   closable: boolean;
   cardClass?: string;
+  link?: string;
+  showBuildDate?: boolean;
 }
 
 const MODAL_CONFIG: Record<Exclude<ModalKind, 'loadError'>, ModalConfig> = {
-  about: { titleKey: 'welcome.about.title', bodyKey: 'welcome.about.body', closable: true },
+  about: { titleKey: 'welcome.about.title', bodyKey: 'welcome.about.body', closable: true, link: 'https://github.com/JiuqingSong/coin2000', showBuildDate: true },
   guide: { titleKey: 'welcome.guide.title', bodyKey: 'welcome.guide.body', closable: true, cardClass: 'guide' },
 };
 
@@ -175,6 +179,8 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
       bodyKey: cfg.bodyKey ?? null,
       closable: cfg.closable,
       cardClass: cfg.cardClass,
+      link: cfg.link,
+      showBuildDate: cfg.showBuildDate,
     });
   };
 
@@ -184,6 +190,8 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
     bodyKey: StringKey | null;
     closable: boolean;
     cardClass?: string;
+    link?: string;
+    showBuildDate?: boolean;
   }) => {
     closeModal();
     currentModalKind = m.kind;
@@ -198,8 +206,17 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
     card.append(modalTitleEl);
     if (m.bodyKey) {
       modalBodyEl = document.createElement('p');
-      modalBodyEl.textContent = t(m.bodyKey);
+      modalBodyEl.textContent = t(m.bodyKey) + (m.showBuildDate ? '\n' + __BUILD_DATE__ : '');
       card.append(modalBodyEl);
+    }
+    if (m.link) {
+      const a = document.createElement('a');
+      a.href = m.link;
+      a.textContent = 'GitHub';
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.className = 'welcome-modal-link';
+      card.append(a);
     }
     if (m.closable) {
       modalBackBtn = document.createElement('button');
@@ -223,7 +240,7 @@ export function mountWelcome(parent: HTMLElement, opts: WelcomeOptions): Welcome
     btnReplay.textContent = t('welcome.action.replay');
     btnLoadMap.textContent = t('welcome.action.loadMap');
     btnEditor.textContent = t('welcome.action.editor');
-    footer.textContent = t('welcome.footer');
+    footer.textContent = t('welcome.footer') + '  ' + __BUILD_DATE__;
     mapPicker.refresh();
 
     if (currentModalKind && currentModalTitleKey) {

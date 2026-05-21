@@ -690,6 +690,18 @@ button:active {
   color: #fff;
 }
 
+.welcome-modal-link {
+  display: block;
+  margin: 0 0 16px;
+  color: #67c1f5;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.welcome-modal-link:hover {
+  text-decoration: underline;
+}
+
 /* ---- Config modal (Steam dark) ---- */
 
 #config-modal {
