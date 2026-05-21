@@ -125,6 +125,8 @@ export function step(world: World, events?: PhysicsEvents): void {
         continue;
       }
 
+      if (a.vel.x === 0 && a.vel.y === 0 && b.vel.x === 0 && b.vel.y === 0) continue;
+
       const pa = prev[i]!;
       const pb = prev[j]!;
       a.pos.x = pa.x;
