@@ -41,7 +41,8 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
-      "Bash(Select-String -Pattern \"tauri\")"
+      "Bash(Select-String -Pattern \"tauri\")",
+      "Bash(git grep *)"
     ]
   }
 }
