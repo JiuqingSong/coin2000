@@ -42,7 +42,9 @@
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
       "Bash(Select-String -Pattern \"tauri\")",
-      "Bash(git grep *)"
+      "Bash(git grep *)",
+      "Bash(npm -v)",
+      "Bash(git checkout *)"
     ]
   }
 }
